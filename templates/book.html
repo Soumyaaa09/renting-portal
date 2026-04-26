@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book {{ vehicle.name }} — DriveNow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+  <style>
+    /* Page hidden until popup dismissed */
+    #booking-page {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #booking-page.revealed {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* ── Overlay ───────────────────────────────────────────── */
+    #instr-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(2, 6, 16, 0.92);
+      backdrop-filter: blur(16px) saturate(180%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: overlayIn 0.35s ease both;
+    }
+    @keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
+
+    #instr-overlay.closing {
+      pointer-events: none;
+      animation: overlayOut 0.4s ease forwards;
+    }
+    @keyframes overlayOut { to { opacity:0; } }
+
+    /* ── Modal box ─────────────────────────────────────────── */
+    #instr-box {
+      position: relative;
+      background: rgba(5, 12, 30, 0.98);
+      border: 1px solid rgba(0,210,255,0.28);
+      border-radius: 28px;
+      padding: 44px 40px 36px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.85), 0 0 60px rgba(0,210,255,0.1), 0 0 120px rgba(168,85,247,0.06);
+      animation: boxIn 0.55s cubic-bezier(0.23,1,0.32,1) both;
+      transition: transform 0.12s ease;
+    }
+    #instr-overlay.closing #instr-box {
+      animation: boxOut 0.38s cubic-bezier(0.55,0,1,0.45) forwards;
+    }
+    @keyframes boxIn {
+      from { opacity:0; transform: perspective(900px) rotateX(20deg) translateY(60px) scale(0.92); }
+      to   { opacity:1; transform: perspective(900px) rotateX(0)     translateY(0)    scale(1); }
+    }
+    @keyframes boxOut {
+      to { opacity:0; transform: perspective(900px) rotateX(-16deg) translateY(50px) scale(0.9); }
+    }
+    #instr-box::before {
+      content:'';
+      position:absolute; top:-1px; left:10%; right:10%; height:2px;
+      background: linear-gradient(90deg, transparent, var(--glow), var(--glow3), var(--glow), transparent);
+      border-radius:2px;
+      animation: arcPulse 3s ease-in-out infinite;
+    }
+    @keyframes arcPulse { 0%,100%{opacity:.55} 50%{opacity:1;filter:blur(1px)} }
+    #instr-box::-webkit-scrollbar { width:4px; }
+    #instr-box::-webkit-scrollbar-thumb { background:rgba(0,210,255,.2); border-radius:2px; }
+
+    /* Close X */
+    #btn-close-instr {
+      position:absolute; top:14px; right:14px;
+      width:32px; height:32px;
+      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+      border-radius:8px; color:var(--text2); font-size:1rem;
+      cursor:pointer; display:grid; place-items:center; transition:all .2s;
+    }
+    #btn-close-instr:hover { background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.35); color:#ef4444; }
+
+    /* Progress dots */
+    .instr-progress { display:flex; justify-content:center; gap:6px; margin-bottom:24px; }
+    .prog-dot { width:6px; height:6px; border-radius:50%; background:rgba(0,210,255,.18); transition:all .35s ease; }
+    .prog-dot.active { background:var(--glow); box-shadow:0 0 8px var(--glow); width:22px; border-radius:3px; }
+
+    /* Header */
+    .instr-header { display:flex; align-items:center; gap:16px; margin-bottom:28px; }
+    .instr-icon-wrap {
+      flex-shrink:0; width:56px; height:56px;
+      background:linear-gradient(135deg,rgba(0,210,255,.18),rgba(168,85,247,.14));
+      border:1px solid rgba(0,210,255,.28); border-radius:16px;
+      display:grid; place-items:center; font-size:1.6rem;
+      animation:iconFloat 3.5s ease-in-out infinite;
+      box-shadow:0 0 20px rgba(0,210,255,.12);
+    }
+    @keyframes iconFloat { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-5px) rotate(2deg)} }
+    .instr-heading { font-family:var(--font-head); font-size:1.2rem; font-weight:800; letter-spacing:.05em; color:#fff; line-height:1.2; }
+    .instr-heading .accent-text { background:linear-gradient(135deg,var(--glow),var(--glow3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .instr-sub { font-size:.82rem; color:var(--text2); margin-top:3px; }
+
+    /* Steps */
+    .instr-steps { list-style:none; display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+    .instr-step {
+      display:flex; align-items:flex-start; gap:14px;
+      padding:14px 16px;
+      background:rgba(0,210,255,.03); border:1px solid rgba(0,210,255,.09);
+      border-radius:12px;
+      opacity:0; transform:translateX(-20px);
+      transition:border-color .3s, background .3s;
+    }
+    .instr-step.step-in { animation:stepSlide .45s cubic-bezier(.23,1,.32,1) forwards; }
+    @keyframes stepSlide { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+    .instr-step:hover { border-color:rgba(0,210,255,.25); background:rgba(0,210,255,.07); }
+    .step-num {
+      flex-shrink:0; width:26px; height:26px;
+      background:linear-gradient(135deg,var(--glow),var(--glow3)); border-radius:7px;
+      display:grid; place-items:center;
+      font-family:var(--font-head); font-size:.65rem; font-weight:800; color:#000; margin-top:2px;
+    }
+    .step-title { font-family:var(--font-head); font-size:.75rem; font-weight:700; letter-spacing:.06em; color:#fff; margin-bottom:4px; }
+    .step-desc { font-size:.875rem; color:var(--text2); line-height:1.55; }
+    .step-desc strong { color:var(--glow); font-weight:700; }
+
+    /* Warning */
+    .instr-warning {
+      display:flex; align-items:flex-start; gap:10px;
+      background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.22);
+      border-radius:10px; padding:12px 16px;
+      font-size:.875rem; color:#fcd34d; margin-bottom:22px; line-height:1.55;
+    }
+    .warn-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+
+    /* Agree */
+    .instr-agree { display:flex; align-items:center; gap:12px; margin-bottom:22px; cursor:pointer; user-select:none; }
+    .instr-agree input[type="checkbox"] {
+      appearance:none; -webkit-appearance:none;
+      width:20px; height:20px; border:2px solid rgba(0,210,255,.3);
+      border-radius:6px; background:rgba(0,210,255,.05);
+      cursor:pointer; flex-shrink:0; transition:all .25s; position:relative;
+    }
+    .instr-agree input[type="checkbox"]:checked {
+      background:linear-gradient(135deg,var(--glow),var(--glow3));
+      border-color:var(--glow); box-shadow:0 0 14px rgba(0,210,255,.4);
+    }
+    .instr-agree input[type="checkbox"]:checked::after {
+      content:'✓'; position:absolute; inset:0;
+      display:grid; place-items:center; font-size:.68rem; font-weight:900; color:#000;
+    }
+    .agree-label { font-size:.88rem; color:var(--text2); line-height:1.45; }
+    .agree-label a { color:var(--glow); text-decoration:none; font-weight:700; }
+
+    /* CTA */
+    .instr-cta { display:flex; gap:12px; }
+    #btn-proceed {
+      flex:1; padding:14px 20px;
+      font-family:var(--font-head); font-size:.78rem; font-weight:800;
+      letter-spacing:.1em; text-transform:uppercase;
+      border:none; border-radius:12px; cursor:not-allowed;
+      position:relative; overflow:hidden; transition:all .3s ease;
+      background:linear-gradient(135deg,#003344,#001a22);
+      color:rgba(0,210,255,.3);
+    }
+    #btn-proceed.ready {
+      background:linear-gradient(135deg,var(--glow),#0095be);
+      color:#000; cursor:pointer;
+      box-shadow:0 0 20px rgba(0,210,255,.3);
+    }
+    #btn-proceed.ready:hover {
+      background:linear-gradient(135deg,#00e5ff,var(--glow));
+      box-shadow:0 0 35px rgba(0,210,255,.55), 0 8px 24px rgba(0,0,0,.4);
+      transform:translateY(-2px) scale(1.01);
+    }
+    #btn-proceed.ready:active { transform:translateY(0); }
+    #btn-proceed::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(90deg,transparent 20%,rgba(255,255,255,.15) 50%,transparent 80%);
+      transform:translateX(-100%); transition:transform .55s ease;
+    }
+    #btn-proceed.ready:hover::before { transform:translateX(100%); }
+
+    #btn-back {
+      padding:14px 22px;
+      font-family:var(--font-head); font-size:.78rem; font-weight:700;
+      letter-spacing:.08em; text-transform:uppercase;
+      background:transparent; border:1px solid rgba(0,210,255,.18);
+      border-radius:12px; color:var(--text2); cursor:pointer;
+      text-decoration:none; display:grid; place-items:center; transition:all .25s;
+    }
+    #btn-back:hover { border-color:rgba(239,68,68,.4); color:#ef4444; background:rgba(239,68,68,.06); }
+
+    @media (max-width:540px) {
+      #instr-box { padding:32px 18px 28px; }
+      .instr-heading { font-size:1rem; }
+      .instr-cta { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- INSTRUCTION POPUP -->
+  <div id="instr-overlay" role="dialog" aria-modal="true" aria-labelledby="instr-title">
+    <div id="instr-box">
+
+      <button id="btn-close-instr" title="Go back">✕</button>
+
+      <div class="instr-progress" aria-hidden="true">
+        <div class="prog-dot active" id="dot-1"></div>
+        <div class="prog-dot" id="dot-2"></div>
+        <div class="prog-dot" id="dot-3"></div>
+        <div class="prog-dot" id="dot-4"></div>
+      </div>
+
+      <div class="instr-header">
+        <div class="instr-icon-wrap">📋</div>
+        <div>
+          <div class="instr-heading" id="instr-title">Before You <span class="accent-text">Book</span></div>
+          <div class="instr-sub">Please read the guidelines carefully</div>
+        </div>
+      </div>
+
+      <ul class="instr-steps">
+        <li class="instr-step">
+          <div class="step-num">01</div>
+          <div>
+            <div class="step-title">Valid ID Required</div>
+            <div class="step-desc">Carry a <strong>government-issued photo ID</strong> (Aadhaar / Passport / DL) at pickup. No ID = no keys.</div>
+          </div>
+        </li>
+        <li class="instr-step">
+          <div class="step-num">02</div>
+          <div>
+            <div class="step-title">Driver's Licence</div>
+            <div class="step-desc">A valid <strong>driving licence</strong> for the vehicle type is mandatory. Unlicensed bookings are cancelled without refund.</div>
+          </div>
+        </li>
+        <li class="instr-step">
+          <div class="step-num">03</div>
+          <div>
+            <div class="step-title">Timely Pick-Up &amp; Return</div>
+            <div class="step-desc">Arrive within <strong>15 minutes</strong> of start time. Late returns billed at <strong>₹50 per 30 min</strong>.</div>
+          </div>
+        </li>
+        <li class="instr-step">
+          <div class="step-num">04</div>
+          <div>
+            <div class="step-title">Fuel &amp; Condition</div>
+            <div class="step-desc">Return with the <strong>same fuel level and condition</strong>. Damage or missing fuel is charged separately.</div>
+          </div>
+        </li>
+        <li class="instr-step">
+          <div class="step-num">05</div>
+          <div>
+            <div class="step-title">Cancellation Policy</div>
+            <div class="step-desc">Free cancellation <strong>2 hrs before</strong> start. Within 2 hrs = <strong>50% charge</strong>. No-shows billed in full.</div>
+          </div>
+        </li>
+        <li class="instr-step">
+          <div class="step-num">06</div>
+          <div>
+            <div class="step-title">Carry Physical Documents to the Shop</div>
+            <div class="step-desc">Even though you've uploaded your DL and Aadhaar, you <strong>must bring the original physical copies</strong> to the shop at pickup. Digital uploads alone are not sufficient — no originals = no vehicle handover.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div class="instr-warning">
+        <span class="warn-icon">⚠️</span>
+        <span>Traffic violations, accidents, or misuse are <strong style="color:#fbbf24;">your sole responsibility</strong> during the rental period.</span>
+      </div>
+
+      <label class="instr-agree">
+        <input type="checkbox" id="agree-check">
+        <span class="agree-label">I have read and agree to the <a href="#" onclick="return false">rental terms &amp; conditions</a> above.</span>
+      </label>
+
+      <div class="instr-cta">
+        <button id="btn-proceed">Proceed to Booking →</button>
+        <a id="btn-back" href="/vehicles">← Back</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOOKING PAGE (hidden until popup dismissed) -->
+  <div id="booking-page">
+
+    {% include 'navbar.html' %}
+
+    <div class="container">
+      <div style="max-width: 560px; margin: 0 auto;">
+
+        <div class="page-header fade-up">
+          <div class="section-label">Step 1 of 1</div>
+          <h1 class="page-title">Book <span class="accent">{{ vehicle.name }}</span></h1>
+          <p class="page-subtitle">Choose your date and time slot below.</p>
+        </div>
+
+        <div class="booking-summary fade-up delay-1">
+          <h4>Vehicle Details</h4>
+          <div class="booking-detail"><span class="label">Vehicle</span><span class="value">{{ vehicle.name }}</span></div>
+          <div class="booking-detail"><span class="label">Type</span><span class="value">{{ vehicle.type }}</span></div>
+          <div class="booking-detail"><span class="label">Rate</span><span class="value" style="color:var(--glow);">₹{{ vehicle.price }} / hr</span></div>
+        </div>
+
+        {% if message %}
+        <div class="form-error fade-up">⚠ {{ message }}</div>
+        {% endif %}
+
+        <div class="card fade-up delay-2">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+              <label class="form-label">Booking Date</label>
+              <input class="form-input" type="date" name="booking_date" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Start Time</label>
+                <input class="form-input" type="time" name="start_time" id="start_time" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">End Time</label>
+                <input class="form-input" type="time" name="end_time" id="end_time" required>
+              </div>
+            </div>
+            <div class="booking-summary" style="margin-top:8px;margin-bottom:24px;">
+              <h4>Estimated Total</h4>
+              <div class="booking-detail"><span class="label">Duration</span><span class="value" id="est-duration">—</span></div>
+              <div class="booking-detail"><span class="label">Estimated Cost</span><span class="value" id="est-price" style="color:var(--glow);">—</span></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Upload Driving Licence <span style="color:#ef4444;">*</span></label>
+              <input class="form-input" type="file" name="dl_file" accept="image/*,.pdf" required style="padding:10px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Upload Aadhaar Card <span style="color:#ef4444;">*</span></label>
+              <input class="form-input" type="file" name="aadhaar_file" accept="image/*,.pdf" required style="padding:10px;">
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Confirm Booking →</button>
+          </form>
+        </div>
+
+        <div style="text-align:center;margin-top:20px;" class="fade-up delay-3">
+          <a href="/vehicles" class="btn" style="font-size:.75rem;">← Back to Fleet</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div id="vehicleData" data-price="{{ vehicle.price }}"></div>
+
+  <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+  <script>
+    /* ── Popup refs ─────────────────────────────────────────── */
+    const overlay     = document.getElementById('instr-overlay');
+    const box         = document.getElementById('instr-box');
+    const agreeCheck  = document.getElementById('agree-check');
+    const btnProceed  = document.getElementById('btn-proceed');
+    const btnClose    = document.getElementById('btn-close-instr');
+    const bookingPage = document.getElementById('booking-page');
+
+    // Lock body scroll while modal open
+    document.body.style.overflow = 'hidden';
+
+    /* ── Stagger steps in ───────────────────────────────────── */
+    document.querySelectorAll('.instr-step').forEach((step, i) => {
+      setTimeout(() => step.classList.add('step-in'), 280 + i * 110);
+    });
+
+    /* ── Progress dots animation ────────────────────────────── */
+    const dots = ['dot-1','dot-2','dot-3','dot-4'].map(id => document.getElementById(id));
+    setTimeout(() => { dots[0].classList.remove('active'); dots[1].classList.add('active'); }, 480);
+    setTimeout(() => { dots[1].classList.remove('active'); dots[2].classList.add('active'); }, 900);
+    setTimeout(() => { dots[2].classList.remove('active'); dots[3].classList.add('active'); }, 1320);
+    setTimeout(() => { dots[3].classList.remove('active'); dots.forEach(d => d.classList.add('active')); }, 1740);
+
+    /* ── 3D mouse tilt on box ───────────────────────────────── */
+    overlay.addEventListener('mousemove', e => {
+      const r  = box.getBoundingClientRect();
+      const dx = ((e.clientX - r.left) / r.width  - 0.5) * 2;
+      const dy = ((e.clientY - r.top)  / r.height - 0.5) * 2;
+      box.style.transform = `perspective(900px) rotateX(${-dy * 4}deg) rotateY(${dx * 5}deg)`;
+    });
+    overlay.addEventListener('mouseleave', () => { box.style.transform = ''; });
+
+    /* ── Checkbox toggles proceed button ────────────────────── */
+    agreeCheck.addEventListener('change', () => {
+      if (agreeCheck.checked) {
+        btnProceed.disabled = false;
+        btnProceed.classList.add('ready');
+      } else {
+        btnProceed.disabled = true;
+        btnProceed.classList.remove('ready');
+      }
+    });
+
+    /* ── Proceed: animate out then reveal booking form ──────── */
+    function dismissPopup() {
+      overlay.classList.add('closing');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        overlay.remove();
+        bookingPage.classList.add('revealed');
+      }, 420);
+    }
+
+    btnProceed.addEventListener('click', dismissPopup);
+
+    /* ── Close / back button → go to vehicles ───────────────── */
+    btnClose.addEventListener('click', () => { window.location.href = '/vehicles'; });
+
+    /* ── ESC → go back ──────────────────────────────────────── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') window.location.href = '/vehicles';
+    });
+
+    /* ── Live price calculator ──────────────────────────────── */
+    const pricePerHr = parseInt(document.getElementById('vehicleData').dataset.price, 10);
+    function calcPrice() {
+      const s = document.getElementById('start_time').value;
+      const e = document.getElementById('end_time').value;
+      if (!s || !e) return;
+      const [sh, sm] = s.split(':').map(Number);
+      const [eh, em] = e.split(':').map(Number);
+      const mins = (eh * 60 + em) - (sh * 60 + sm);
+      const dur  = document.getElementById('est-duration');
+      const price = document.getElementById('est-price');
+      if (mins <= 0) { dur.textContent = 'Invalid range'; price.textContent = '—'; return; }
+      const hrs = mins / 60;
+      dur.textContent   = `${hrs.toFixed(1)} hr${hrs !== 1 ? 's' : ''}`;
+      price.textContent = `₹${Math.round(hrs * pricePerHr)}`;
+    }
+    document.getElementById('start_time').addEventListener('change', calcPrice);
+    document.getElementById('end_time').addEventListener('change', calcPrice);
+  </script>
+</body>
+</html>

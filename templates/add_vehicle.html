@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Vehicle — DriveNow Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Admin Navbar -->
+  <nav class="navbar">
+    <a href="/admin" class="navbar-brand">
+      <div class="brand-icon">⚙️</div>
+      Drive<span>Now</span> <span style="font-size:0.65rem; color:var(--glow2); margin-left:6px; border:1px solid rgba(245,158,11,0.3); padding:2px 8px; border-radius:4px;">ADMIN</span>
+    </a>
+    <div class="navbar-links">
+      <a href="/admin">Dashboard</a>
+      <a href="/admin/bookings">Bookings</a>
+      <a href="/admin/add-vehicle">Add Vehicle</a>
+      <a href="/logout" class="logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div style="max-width: 520px; margin: 0 auto;">
+
+      <div class="page-header fade-up">
+        <div class="section-label">Admin → Fleet</div>
+        <h1 class="page-title">Add <span class="accent">Vehicle</span></h1>
+        <p class="page-subtitle">Register a new vehicle to make it available for booking.</p>
+      </div>
+
+      <div class="card fade-up delay-1" style="padding: 36px;">
+        <form method="POST">
+
+          <div class="form-group">
+            <label class="form-label">Vehicle Name</label>
+            <input class="form-input" type="text" name="name" placeholder="e.g. Honda City, Royal Enfield…" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vehicle Type</label>
+            <input class="form-input" type="text" name="type" placeholder="Car / Bike / SUV / Van" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Price per Hour (₹)</label>
+            <input class="form-input" type="number" name="price" placeholder="e.g. 250" min="1" required>
+          </div>
+
+          <div style="margin-top: 8px; display:flex; gap:12px; flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary">Add to Fleet →</button>
+            <a href="/admin" class="btn">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+</body>
+</html>

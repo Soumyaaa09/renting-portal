@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Bookings — DriveNow Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Admin Navbar -->
+  <nav class="navbar">
+    <a href="/admin" class="navbar-brand">
+      <div class="brand-icon">⚙️</div>
+      Drive<span>Now</span> <span style="font-size:0.65rem; color:var(--glow2); margin-left:6px; border:1px solid rgba(245,158,11,0.3); padding:2px 8px; border-radius:4px;">ADMIN</span>
+    </a>
+    <div class="navbar-links">
+      <a href="/admin">Dashboard</a>
+      <a href="/admin/bookings">Bookings</a>
+      <a href="/admin/add-vehicle">Add Vehicle</a>
+      <a href="/logout" class="logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="page-header fade-up">
+      <div class="section-label">Admin → Bookings</div>
+      <h1 class="page-title">Booking <span class="accent">Requests</span></h1>
+      <p class="page-subtitle">Approve or reject customer booking requests below.</p>
+    </div>
+
+    {% if bookings %}
+    <div class="table-wrapper fade-up delay-1">
+      <table>
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Vehicle</th>
+            <th>Date</th>
+            <th>Time Slot</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>
+              <div style="font-weight:700; color:#fff;">{{ b.user_name }}</div>
+            </td>
+            <td>{{ b.vehicle_name }}</td>
+            <td>{{ b.booking_date }}</td>
+            <td>
+              <span style="color:var(--glow); font-family:var(--font-head); font-size:0.82rem; letter-spacing:0.04em;">
+                {{ b.start_time }} – {{ b.end_time }}
+              </span>
+            </td>
+            <td>
+              <span style="font-family:var(--font-head); color:var(--glow2);">₹{{ b.price }}</span>
+            </td>
+            <td>
+              {% if b.status == 'pending' %}
+                <span class="badge badge-pending">Pending</span>
+              {% elif b.status == 'approved' %}
+                <span class="badge badge-approved">Approved</span>
+              {% else %}
+                <span class="badge badge-rejected">Rejected</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if b.status == 'pending' %}
+              <div class="action-group">
+                <a href="/approve/{{ b.id }}" class="btn btn-success btn-sm">✓ Approve</a>
+                <a href="/reject/{{ b.id }}"  class="btn btn-danger  btn-sm">✕ Reject</a>
+              </div>
+              {% else %}
+              <span style="color:var(--text2); font-size:0.82rem;">No action needed</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state fade-up">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">No booking requests</div>
+      <div class="empty-desc">All clear — no pending or past bookings to review.</div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fleet — DriveNow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  {% include 'navbar.html' %}
+
+  <div class="container">
+
+    <div class="page-header fade-up">
+      <div class="section-label">Available Now</div>
+      <h1 class="page-title">Our <span class="accent">Fleet</span></h1>
+      <p class="page-subtitle">Select a vehicle and book your time slot instantly.</p>
+    </div>
+
+    <!-- Filter pills (decorative, can be wired up with JS) -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:32px;" class="fade-up delay-1">
+      <button class="btn" style="padding:8px 20px; font-size:0.72rem;" onclick="filterCards('all')">All</button>
+      <button class="btn" style="padding:8px 20px; font-size:0.72rem;" onclick="filterCards('car')">Cars</button>
+      <button class="btn" style="padding:8px 20px; font-size:0.72rem;" onclick="filterCards('bike')">Bikes</button>
+      <button class="btn" style="padding:8px 20px; font-size:0.72rem;" onclick="filterCards('suv')">SUVs</button>
+    </div>
+
+    {% if vehicles %}
+    <div class="grid grid-3">
+      {% for v in vehicles %}
+      <div class="card vehicle-card fade-up delay-{{ loop.index % 3 + 1 }}" data-type="{{ v.type | lower }}">
+
+        <!-- Top badge -->
+        <div class="vehicle-badge">
+          {% if v.type | lower == 'car' %}🚗
+          {% elif v.type | lower == 'bike' %}🏍
+          {% elif v.type | lower == 'suv' %}🚙
+          {% else %}🚘
+          {% endif %}
+          {{ v.type }}
+        </div>
+
+        <!-- Name -->
+        <div class="vehicle-name">{{ v.name }}</div>
+
+        <!-- Price -->
+        <div class="vehicle-price">
+          ₹{{ v.price }} <span>/ hr</span>
+        </div>
+
+        <!-- Specs row -->
+        <div style="display:flex; gap:16px; margin-top:4px;">
+          <div style="font-size:0.82rem; color:var(--text2);">
+            <span style="color:var(--glow);">●</span> Available
+          </div>
+          <div style="font-size:0.82rem; color:var(--text2);">Instant Booking</div>
+        </div>
+
+        <div class="divider" style="margin: 16px 0;"></div>
+
+{% if role != 'admin' %}
+    <button class="btn" onclick="window.location.href='/book/{{ v.id }}'">Book Now</button>
+{% else %}
+    <span style="color: #999;">Admin View</span>
+{% endif %}
+
+</div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state fade-up">
+      <div class="empty-icon">🚗</div>
+      <div class="empty-title">No vehicles available</div>
+      <div class="empty-desc">Check back soon — new vehicles are added regularly.</div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  
+  <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+  <script>
+    function filterCards(type) {
+      document.querySelectorAll('.vehicle-card').forEach(c => {
+        const t = c.dataset.type || '';
+        c.style.display = (type === 'all' || t.includes(type)) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

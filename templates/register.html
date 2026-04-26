@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — DriveNow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        <div class="auth-logo-icon">🔑</div>
+        <div class="auth-title">Create Account</div>
+        <div class="auth-subtitle">Join DriveNow — Rent any vehicle, anytime</div>
+      </div>
+
+      <form method="POST">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" type="text" name="name" placeholder="John Doe" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" name="email" placeholder="you@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="form-input" type="text" name="phone" placeholder="+91 98765 43210" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
+          Create Account →
+        </button>
+      </form>
+
+      <div class="form-link">
+        Already have an account? <a href="/login">Sign in</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+</body>
+</html>
