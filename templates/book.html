@@ -310,7 +310,17 @@
         </div>
 
         {% if message %}
-        <div class="form-error fade-up">⚠ {{ message }}</div>
+        <div class="fade-up" style="
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.35);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #fca5a5;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin-bottom: 16px;">
+            {{ message }}
+        </div>
         {% endif %}
 
         <div class="card fade-up delay-2">

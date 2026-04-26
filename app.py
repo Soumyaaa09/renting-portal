@@ -221,16 +221,19 @@ def book(vehicle_id):
         if end <= start:
             return render_template('book.html', vehicle=vehicle, message="Invalid time selection")
 
-        # 🚫 overlap check
+        # 🚫 overlap check — only against approved/pending bookings
         existing = supabase.table("bookings") \
-            .select("*") \
-            .eq("vehicle_name", vehicle['name']) \
+            .select("start_time,end_time") \
+            .eq("vehicle_id", vehicle_id) \
             .eq("booking_date", booking_date) \
+            .neq("status", "rejected") \
+            .neq("status", "cancelled") \
             .execute().data
 
         for b in existing:
             if start_time < b['end_time'] and end_time > b['start_time']:
-                return render_template('book.html', vehicle=vehicle, message="Time slot already booked")
+                return render_template('book.html', vehicle=vehicle,
+                    message=f"⚠ This vehicle is already booked between {b['start_time']} – {b['end_time']} on this date. Please choose a different time slot.")
 
         # 💰 price calculation
         hours = (end - start).seconds / 3600
@@ -239,6 +242,7 @@ def book(vehicle_id):
         supabase.table("bookings").insert({
             "user_id": session['user_id'],
             "user_name": session['user_name'],
+            "vehicle_id": vehicle_id,
             "vehicle_name": vehicle['name'],
             "price": total_price,
             "booking_date": booking_date,
