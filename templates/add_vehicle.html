@@ -33,7 +33,7 @@
       </div>
 
       <div class="card fade-up delay-1" style="padding: 36px;">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
 
           <div class="form-group">
             <label class="form-label">Vehicle Name</label>
@@ -50,6 +50,22 @@
             <input class="form-input" type="number" name="price" placeholder="e.g. 250" min="1" required>
           </div>
 
+          <div class="form-group">
+            <label class="form-label">Vehicle Photo <span style="color:var(--text2); font-weight:400;">(optional)</span></label>
+            <div id="img-area" style="border:2px dashed rgba(0,210,255,0.25); border-radius:12px;
+                padding:24px; text-align:center; cursor:pointer; transition:all 0.25s;
+                background:rgba(0,210,255,0.03); position:relative;">
+              <input type="file" name="image_file" id="image_file" accept="image/*"
+                style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+              <div style="font-size:2rem; margin-bottom:8px;">🚗</div>
+              <div style="font-size:0.8rem; color:var(--text2);">Click or drag & drop a vehicle photo</div>
+              <div id="img-filename" style="display:none; margin-top:8px; font-size:0.78rem;
+                  color:var(--glow); font-weight:600;"></div>
+              <img id="img-preview" src="" alt="" style="display:none; margin-top:12px;
+                  max-height:160px; border-radius:8px; object-fit:cover; width:100%;">
+            </div>
+          </div>
+
           <div style="margin-top: 8px; display:flex; gap:12px; flex-wrap:wrap;">
             <button type="submit" class="btn btn-primary">Add to Fleet →</button>
             <a href="/admin" class="btn">Cancel</a>
@@ -62,5 +78,25 @@
   </div>
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+  <script>
+    const input   = document.getElementById('image_file');
+    const area    = document.getElementById('img-area');
+    const fname   = document.getElementById('img-filename');
+    const preview = document.getElementById('img-preview');
+
+    input.addEventListener('change', () => {
+      if (input.files && input.files[0]) {
+        fname.textContent = '✓ ' + input.files[0].name;
+        fname.style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+        area.style.borderColor = 'rgba(0,210,255,0.5)';
+      }
+    });
+  </script>
 </body>
 </html>

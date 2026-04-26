@@ -93,8 +93,29 @@ def vehicles_page():
     if 'user_id' not in session:
         return redirect('/login')
 
+    from datetime import datetime
     vehicles = supabase.table("vehicles").select("*").execute().data
-    return render_template('vehicles.html', vehicles=vehicles, role=session.get('role'))
+
+    # Check which vehicles are booked RIGHT NOW
+    now       = datetime.now()
+    today     = now.strftime("%Y-%m-%d")
+    now_time  = now.strftime("%H:%M")
+
+    active_bookings = supabase.table("bookings") \
+        .select("vehicle_name,start_time,end_time") \
+        .eq("booking_date", today) \
+        .eq("status", "approved") \
+        .execute().data
+
+    booked_now = set()
+    for b in active_bookings:
+        b_start = b['start_time'][:5]
+        b_end   = b['end_time'][:5]
+        if b_start <= now_time <= b_end:
+            booked_now.add(b['vehicle_name'])
+
+    return render_template('vehicles.html', vehicles=vehicles,
+                           role=session.get('role'), booked_now=booked_now)
 
 
 # ---------------- ADD VEHICLE (ADMIN) ----------------
@@ -104,10 +125,23 @@ def add_vehicle():
         return redirect('/login')
 
     if request.method == 'POST':
+        image_url = None
+        image_file = request.files.get('image_file')
+        if image_file and image_file.filename != '':
+            ext       = image_file.filename.rsplit('.', 1)[-1].lower()
+            img_path  = f"vehicles/{uuid.uuid4().hex}.{ext}"
+            try:
+                supabase.storage.from_("documents").upload(img_path, image_file.read(),
+                    {"content-type": image_file.content_type, "upsert": "true"})
+                image_url = supabase.storage.from_("documents").get_public_url(img_path)
+            except Exception:
+                pass
+
         supabase.table("vehicles").insert({
-            "name": request.form['name'],
-            "type": request.form['type'],
-            "price": int(request.form['price'])  # per hour
+            "name":      request.form['name'],
+            "type":      request.form['type'],
+            "price":     int(request.form['price']),
+            "image_url": image_url
         }).execute()
 
         return redirect('/vehicles')
@@ -221,19 +255,23 @@ def book(vehicle_id):
         if end <= start:
             return render_template('book.html', vehicle=vehicle, message="Invalid time selection")
 
-        # 🚫 overlap check — only against approved/pending bookings
+        # 🚫 overlap check — check by vehicle_id OR vehicle_name to cover old bookings
         existing = supabase.table("bookings") \
-            .select("start_time,end_time") \
-            .eq("vehicle_id", vehicle_id) \
+            .select("start_time,end_time,status") \
+            .eq("vehicle_name", vehicle['name']) \
             .eq("booking_date", booking_date) \
             .neq("status", "rejected") \
             .neq("status", "cancelled") \
             .execute().data
 
         for b in existing:
-            if start_time < b['end_time'] and end_time > b['start_time']:
+            b_start = b['start_time'][:5]  # trim seconds if present e.g. "10:00:00" -> "10:00"
+            b_end   = b['end_time'][:5]
+            s_start = start_time[:5]
+            s_end   = end_time[:5]
+            if s_start < b_end and s_end > b_start:
                 return render_template('book.html', vehicle=vehicle,
-                    message=f"⚠ This vehicle is already booked between {b['start_time']} – {b['end_time']} on this date. Please choose a different time slot.")
+                    message=f"⚠ This vehicle is already booked from {b_start} to {b_end} on this date. Please choose a different time slot.")
 
         # 💰 price calculation
         hours = (end - start).seconds / 3600

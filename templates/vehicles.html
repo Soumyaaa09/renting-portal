@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fleet — DriveNow</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+  <style>
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 4px #22c55e; transform: scale(1); }
+      50%       { box-shadow: 0 0 10px #22c55e; transform: scale(1.3); }
+    }
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 4px #ef4444; transform: scale(1); }
+      50%       { box-shadow: 0 0 10px #ef4444; transform: scale(1.3); }
+    }
+  </style>
 </head>
 <body>
   <canvas id="particle-canvas"></canvas>
@@ -32,6 +42,14 @@
       {% for v in vehicles %}
       <div class="card vehicle-card fade-up delay-{{ loop.index % 3 + 1 }}" data-type="{{ v.type | lower }}">
 
+        <!-- Vehicle Image -->
+        {% if v.image_url %}
+        <div style="margin: -24px -24px 16px -24px; border-radius:14px 14px 0 0; overflow:hidden; height:180px;">
+          <img src="{{ v.image_url }}" alt="{{ v.name }}"
+            style="width:100%; height:100%; object-fit:cover; display:block;">
+        </div>
+        {% endif %}
+
         <!-- Top badge -->
         <div class="vehicle-badge">
           {% if v.type | lower == 'car' %}🚗
@@ -51,17 +69,34 @@
         </div>
 
         <!-- Specs row -->
-        <div style="display:flex; gap:16px; margin-top:4px;">
-          <div style="font-size:0.82rem; color:var(--text2);">
-            <span style="color:var(--glow);">●</span> Available
+        <div style="display:flex; gap:16px; margin-top:4px; align-items:center;">
+          {% if v.name in booked_now %}
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#ef4444;
+                         box-shadow:0 0 6px #ef4444; display:inline-block;
+                         animation: pulse-red 1.5s infinite;"></span>
+            <span style="font-size:0.82rem; color:#f87171; font-weight:600;">Booked Now</span>
           </div>
+          {% else %}
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#22c55e;
+                         box-shadow:0 0 6px #22c55e; display:inline-block;
+                         animation: pulse-green 1.5s infinite;"></span>
+            <span style="font-size:0.82rem; color:#86efac; font-weight:600;">Available</span>
+          </div>
+          {% endif %}
           <div style="font-size:0.82rem; color:var(--text2);">Instant Booking</div>
         </div>
 
         <div class="divider" style="margin: 16px 0;"></div>
 
 {% if role != 'admin' %}
+    {% if v.name in booked_now %}
+    <button class="btn" disabled style="opacity:0.45; cursor:not-allowed; background:rgba(239,68,68,0.1);
+        border-color:rgba(239,68,68,0.3); color:#f87171;">Currently Booked</button>
+    {% else %}
     <button class="btn" onclick="window.location.href='/book/{{ v.id }}'">Book Now</button>
+    {% endif %}
 {% else %}
     <span style="color: #999;">Admin View</span>
 {% endif %}
