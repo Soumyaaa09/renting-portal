@@ -3,8 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — DriveNow</title>
+  <title>Sign In — DriveNow</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+  <style>
+    .tab-row {
+      display: flex;
+      gap: 0;
+      background: rgba(30,20,10,0.05);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 9px 0;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.02em;
+    }
+    .tab-btn.active {
+      background: var(--surface2);
+      color: var(--ink);
+      box-shadow: 0 1px 6px rgba(30,20,10,0.1);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .divider-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text2);
+      font-size: 0.78rem;
+      margin: 20px 0;
+    }
+    .divider-text::before,
+    .divider-text::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+  </style>
 </head>
 <body>
   <canvas id="particle-canvas"></canvas>
@@ -22,23 +69,57 @@
       <div class="form-error">⚠ {{ message }}</div>
       {% endif %}
 
-      <form method="POST">
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input class="form-input" type="email" name="email" placeholder="you@example.com" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input class="form-input" type="password" name="password" placeholder="••••••••" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
-          Sign In →
+      <!-- Tab switcher -->
+      <div class="tab-row">
+        <button class="tab-btn active" id="tab-otp" onclick="switchTab('otp')">
+          📬 Email OTP
         </button>
-      </form>
+        <button class="tab-btn" id="tab-pass" onclick="switchTab('pass')">
+          🔑 Password
+        </button>
+      </div>
 
-      <div class="form-link">
+      <!-- OTP Tab -->
+      <div class="tab-panel active" id="panel-otp">
+        <form method="POST" action="/login">
+          <input type="hidden" name="method" value="otp">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" name="email"
+              placeholder="you@example.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:4px;">
+            Send OTP Code →
+          </button>
+        </form>
+        <div style="margin-top:16px; padding:14px 16px; background:rgba(200,82,42,0.05);
+                    border:1px solid rgba(200,82,42,0.1); border-radius:10px;
+                    font-size:0.8rem; color:var(--text2); line-height:1.7;">
+          A 6-digit code will be sent to your email — no password needed.
+        </div>
+      </div>
+
+      <!-- Password Tab -->
+      <div class="tab-panel" id="panel-pass">
+        <form method="POST" action="/login">
+          <input type="hidden" name="method" value="password">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" name="email"
+              placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" type="password" name="password"
+              placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="margin-top:4px;">
+            Sign In →
+          </button>
+        </form>
+      </div>
+
+      <div class="form-link" style="margin-top:20px;">
         Don't have an account? <a href="/register">Create one</a>
       </div>
 
@@ -46,5 +127,21 @@
   </div>
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-'   + tab).classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+
+      // Focus first input in active tab
+      const firstInput = document.querySelector('#panel-' + tab + ' input:not([type=hidden])');
+      if (firstInput) firstInput.focus();
+    }
+
+    // If error came back, re-open the tab that was used
+    const method = "{{ request.form.get('method', '') }}";
+    if (method === 'password') switchTab('pass');
+  </script>
 </body>
 </html>

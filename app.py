@@ -1,12 +1,62 @@
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, redirect, session
 from supabase_client import supabase
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 import uuid
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.environ.get("SECRET_KEY", "secret123")
+
+MAIL_EMAIL    = os.environ.get("MAIL_USERNAME", "")
+MAIL_PASSWORD = os.environ.get("MAIL_APP_PASSWORD", "")
+
+def send_otp_email(to_email, otp):
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Your DriveNow Login OTP"
+        msg["From"]    = MAIL_EMAIL
+        msg["To"]      = to_email
+
+        html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
+                    background:#f7f5f2;color:#1a1612;border-radius:16px;padding:40px;
+                    border:1px solid rgba(30,20,10,0.1);">
+          <div style="font-size:1.6rem;font-weight:800;color:#c8522a;margin-bottom:8px;">
+            DriveNow 🚗
+          </div>
+          <p style="color:#6b6058;margin-bottom:28px;">Your one-time login code is:</p>
+          <div style="font-size:3rem;font-weight:900;letter-spacing:14px;
+                      color:#c8522a;text-align:center;padding:20px;
+                      background:rgba(200,82,42,0.06);border-radius:12px;
+                      border:1px solid rgba(200,82,42,0.15);margin-bottom:24px;">
+            {otp}
+          </div>
+          <p style="color:#6b6058;font-size:0.85rem;">
+            This code expires in <strong style="color:#1a1612;">10 minutes</strong>.
+            Do not share it with anyone.
+          </p>
+        </div>
+        """
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(MAIL_EMAIL, MAIL_PASSWORD)
+            server.sendmail(MAIL_EMAIL, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Email error: {e}")
+        return False
+
 
 # ---------------- HOME ----------------
 @app.route('/')
@@ -38,44 +88,99 @@ def register():
     return render_template('register.html')
 
 
-# ---------------- LOGIN ----------------
+# ---------------- LOGIN (step 1 — send OTP) ----------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        email  = request.form['email'].strip().lower()
+        method = request.form.get('method', 'otp')
 
-        email = request.form['email']
-        password = request.form['password']
+        user = supabase.table("users").select("*").eq("email", email).execute().data
+        if not user:
+            return render_template('login.html', message="No account found with this email.")
+        user = user[0]
 
-        response = supabase.table("users").select("*").eq("email", email).execute()
-        user = response.data
-
-        if user:
-            user = user[0]
-
-            stored_password = user['password']
-
-            if stored_password.startswith('$2b$'):
-                # bcrypt password
-                valid = bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
+        # ── PASSWORD login ──────────────────────────────────
+        if method == 'password':
+            password = request.form.get('password', '')
+            stored   = user.get('password', '')
+            if stored and stored.startswith('$2b$'):
+                valid = bcrypt.checkpw(password.encode('utf-8'), stored.encode('utf-8'))
             else:
-                # plain password (old users)
-                valid = (password == stored_password)
+                valid = (password == stored)
 
-            if valid:
-                session['user_id'] = user['id']
-                session['role'] = user['role']
-                session['user_name'] = user['name']
+            if not valid:
+                return render_template('login.html', message="Incorrect password. Try OTP login instead.")
 
-                if user['role'] == 'admin':
-                    return redirect('/admin')
-                else:
-                    return redirect('/dashboard')
-            else:
-                return render_template('login.html', message="Invalid Password")
-        else:
-            return render_template('login.html', message="User not found")
+            session['user_id']   = user['id']
+            session['role']      = user['role']
+            session['user_name'] = user['name']
+            session.permanent    = True
+            return redirect('/admin' if user['role'] == 'admin' else '/dashboard')
+
+        # ── OTP login ───────────────────────────────────────
+        otp = str(random.randint(100000, 999999))
+        session['otp']         = otp
+        session['otp_email']   = email
+        session['otp_expires'] = (datetime.now().timestamp() + 600)
+
+        sent = send_otp_email(email, otp)
+        if not sent:
+            return render_template('login.html', message="Failed to send OTP email. Please use password login.")
+
+        return redirect('/verify-otp')
 
     return render_template('login.html')
+
+
+# ---------------- LOGIN (step 2 — verify OTP) ----------------
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    if 'otp' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        entered = request.form['otp'].strip()
+
+        if datetime.now().timestamp() > session.get('otp_expires', 0):
+            session.pop('otp', None)
+            return render_template('verify_otp.html', message="OTP expired. Please login again.", email=session.get('otp_email',''))
+
+        if entered != session.get('otp'):
+            return render_template('verify_otp.html', message="Incorrect OTP. Please try again.", email=session.get('otp_email',''))
+
+        # OTP correct — log the user in
+        email = session.pop('otp_email')
+        session.pop('otp', None)
+        session.pop('otp_expires', None)
+
+        user = supabase.table("users").select("*").eq("email", email).execute().data[0]
+        session['user_id']   = user['id']
+        session['role']      = user['role']
+        session['user_name'] = user['name']
+
+        if user['role'] == 'admin':
+            return redirect('/admin')
+        else:
+            return redirect('/dashboard')
+
+    return render_template('verify_otp.html', email=session.get('otp_email', ''))
+
+
+# ---------------- RESEND OTP ----------------
+@app.route('/resend-otp')
+def resend_otp():
+    email = session.get('otp_email')
+    if not email:
+        return redirect('/login')
+
+    otp = str(random.randint(100000, 999999))
+    session['otp']         = otp
+    session['otp_expires'] = (datetime.now().timestamp() + 600)
+
+    send_otp_email(email, otp)
+    return redirect('/verify-otp')
+
 
 
 # ---------------- DASHBOARD ----------------
@@ -118,18 +223,64 @@ def vehicles_page():
                            role=session.get('role'), booked_now=booked_now)
 
 
-# ---------------- ADD VEHICLE (ADMIN) ----------------
+
+# ---------------- ADMIN FLEET LIST ----------------
+@app.route('/admin/vehicles')
+def admin_vehicles():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    vehicles = supabase.table("vehicles").select("*").execute().data
+    return render_template('admin_vehicles.html', vehicles=vehicles)
+
+
+# ---------------- EDIT VEHICLE ----------------
+@app.route('/admin/edit-vehicle/<vehicle_id>', methods=['GET', 'POST'])
+def edit_vehicle(vehicle_id):
+    if session.get('role') != 'admin':
+        return redirect('/login')
+
+    vehicle = supabase.table("vehicles").select("*").eq("id", vehicle_id).execute().data[0]
+
+    if request.method == 'POST':
+        updates = {
+            "name":        request.form['name'],
+            "type":        request.form['type'],
+            "price":       int(request.form['price']),
+            "fuel_type":   request.form.get('fuel_type') or None,
+            "seats":       int(request.form['seats']) if request.form.get('seats') else None,
+            "description": request.form.get('description') or None,
+        }
+
+        image_file = request.files.get('image_file')
+        if image_file and image_file.filename != '':
+            ext      = image_file.filename.rsplit('.', 1)[-1].lower()
+            img_path = f"vehicles/{uuid.uuid4().hex}.{ext}"
+            try:
+                supabase.storage.from_("documents").upload(img_path, image_file.read(),
+                    {"content-type": image_file.content_type, "upsert": "true"})
+                updates["image_url"] = supabase.storage.from_("documents").get_public_url(img_path)
+            except Exception:
+                pass
+
+        supabase.table("vehicles").update(updates).eq("id", vehicle_id).execute()
+        vehicle = supabase.table("vehicles").select("*").eq("id", vehicle_id).execute().data[0]
+        return render_template('edit_vehicle.html', vehicle=vehicle, message="Changes saved successfully!")
+
+    return render_template('edit_vehicle.html', vehicle=vehicle, message=None)
+
+
+# ---------------- ADD VEHICLE ----------------
 @app.route('/admin/add-vehicle', methods=['GET', 'POST'])
 def add_vehicle():
     if session.get('role') != 'admin':
         return redirect('/login')
 
     if request.method == 'POST':
-        image_url = None
+        image_url  = None
         image_file = request.files.get('image_file')
         if image_file and image_file.filename != '':
-            ext       = image_file.filename.rsplit('.', 1)[-1].lower()
-            img_path  = f"vehicles/{uuid.uuid4().hex}.{ext}"
+            ext      = image_file.filename.rsplit('.', 1)[-1].lower()
+            img_path = f"vehicles/{uuid.uuid4().hex}.{ext}"
             try:
                 supabase.storage.from_("documents").upload(img_path, image_file.read(),
                     {"content-type": image_file.content_type, "upsert": "true"})
@@ -143,10 +294,18 @@ def add_vehicle():
             "price":     int(request.form['price']),
             "image_url": image_url
         }).execute()
-
-        return redirect('/vehicles')
+        return redirect('/admin/vehicles')
 
     return render_template('add_vehicle.html')
+
+
+# ---------------- DELETE VEHICLE ----------------
+@app.route('/admin/delete-vehicle/<vehicle_id>', methods=['POST'])
+def delete_vehicle(vehicle_id):
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    supabase.table("vehicles").delete().eq("id", vehicle_id).execute()
+    return redirect('/admin/vehicles')
 
 
 # ---------------- UPLOAD DOCUMENTS ----------------
@@ -371,6 +530,53 @@ def reject(booking_id):
         .execute()
 
     return redirect('/admin/bookings')
+
+
+# ---------------- RATE BOOKING ----------------
+@app.route('/rate/<booking_id>', methods=['GET', 'POST'])
+def rate_booking(booking_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    booking = supabase.table("bookings").select("*").eq("id", booking_id).eq("user_id", session['user_id']).execute().data
+    if not booking:
+        return redirect('/my-bookings')
+    booking = booking[0]
+
+    if booking['status'] != 'approved':
+        return redirect('/my-bookings')
+
+    # Check if already rated
+    existing = supabase.table("reviews").select("id").eq("booking_id", booking_id).execute().data
+    if existing:
+        return redirect('/my-bookings')
+
+    if request.method == 'POST':
+        stars   = int(request.form['stars'])
+        comment = request.form.get('comment', '').strip()
+
+        supabase.table("reviews").insert({
+            "booking_id":   booking_id,
+            "user_id":      session['user_id'],
+            "user_name":    session['user_name'],
+            "vehicle_id":   booking['vehicle_id'],
+            "vehicle_name": booking['vehicle_name'],
+            "stars":        stars,
+            "comment":      comment
+        }).execute()
+
+        return redirect('/my-bookings?rated=1')
+
+    return render_template('rate_booking.html', booking=booking)
+
+
+# ---------------- VEHICLE REVIEWS (public) ----------------
+@app.route('/reviews/<vehicle_id>')
+def vehicle_reviews(vehicle_id):
+    reviews = supabase.table("reviews").select("*").eq("vehicle_id", vehicle_id).order("id", desc=True).execute().data
+    vehicle = supabase.table("vehicles").select("*").eq("id", vehicle_id).execute().data[0]
+    avg = round(sum(r['stars'] for r in reviews) / len(reviews), 1) if reviews else None
+    return render_template('vehicle_reviews.html', reviews=reviews, vehicle=vehicle, avg=avg)
 
 
 # ---------------- LOGOUT ----------------
