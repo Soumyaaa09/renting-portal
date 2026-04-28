@@ -10,8 +10,8 @@
 :root {
   --bg:          #f7f5f2;
   --bg2:         #efecea;
-  --surface:     rgba(255, 254, 252, 0.92);
-  --surface2:    rgba(255, 255, 255, 0.98);
+  --surface:     #ffffff;
+  --surface2:    #ffffff;
   --border:      rgba(30, 20, 10, 0.1);
   --border2:     rgba(30, 20, 10, 0.05);
   --ink:         #1a1612;
@@ -206,6 +206,11 @@ body::after {
   transform-style: preserve-3d;
   cursor: default;
   overflow: hidden;
+  color: #1a1612;
+}
+
+.card * {
+  color: inherit;
 }
 
 /* Top accent line */
@@ -258,6 +263,36 @@ body::after {
 /* ── Vehicle Cards ─────────────────────────────────────────── */
 .vehicle-card { display: flex; flex-direction: column; gap: 14px; }
 
+.vehicle-name {
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #1a1612;
+  margin-top: 2px;
+}
+
+.vehicle-type {
+  font-size: 0.85rem;
+  color: #6b6058;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.vehicle-price {
+  font-family: var(--font-head);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #c8522a;
+}
+
+.vehicle-price span {
+  font-size: 0.8rem;
+  color: #6b6058;
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
 .vehicle-badge {
   display: inline-flex;
   align-items: center;
@@ -268,40 +303,10 @@ body::after {
   letter-spacing: 0.1em;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(30,20,10,0.06);
-  border: 1px solid rgba(30,20,10,0.1);
-  color: var(--ink2);
+  background: rgba(30,20,10,0.07);
+  border: 1px solid rgba(30,20,10,0.12);
+  color: #1a1612;
   width: fit-content;
-}
-
-.vehicle-name {
-  font-family: var(--font-head);
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  margin-top: 2px;
-}
-
-.vehicle-type {
-  font-size: 0.85rem;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.vehicle-price {
-  font-family: var(--font-head);
-  font-size: 1.7rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.vehicle-price span {
-  font-size: 0.8rem;
-  color: var(--text2);
-  font-family: var(--font-body);
-  font-weight: 400;
 }
 
 /* ── Buttons ───────────────────────────────────────────────── */
@@ -891,14 +896,194 @@ tbody tr.row-visible {
 ::-webkit-scrollbar-thumb { background: rgba(30,20,10,0.15); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(30,20,10,0.25); }
 
-/* ── Responsive ────────────────────────────────────────────── */
+/* ============================================================
+   MOBILE RESPONSIVE — Full overhaul for < 768px
+   ============================================================ */
+
+/* ── Hamburger menu ─────────────────────────────────────────── */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 38px; height: 38px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  z-index: 200;
+}
+.nav-toggle span {
+  display: block;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Mobile nav drawer ──────────────────────────────────────── */
 @media (max-width: 768px) {
-  .navbar { padding: 0 20px; }
-  .navbar::after { left: 20px; right: 20px; }
-  .navbar-brand { font-size: 1rem; }
-  .hero-content { padding: 40px 20px; }
-  .auth-card { padding: 32px 24px; }
+  .nav-toggle { display: flex; }
+
+  .navbar {
+    padding: 0 16px;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 150;
+  }
+
+  .navbar-links {
+    position: fixed;
+    top: 58px; left: 0; right: 0;
+    background: rgba(247,245,242,0.98);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 16px 16px;
+    transform: translateY(-120%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.23,1,0.32,1), opacity 0.3s ease;
+    z-index: 149;
+    box-shadow: 0 8px 32px rgba(30,20,10,0.1);
+  }
+
+  .navbar-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .navbar-links a {
+    padding: 14px 12px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border-bottom: 1px solid var(--border2);
+  }
+  .navbar-links a:last-child { border-bottom: none; }
+
+  /* ── Layout ────────────────────────────────────────────────── */
+  .container { padding: 20px 14px; }
+
+  .page-title { font-size: 1.8rem; }
+  .page-subtitle { font-size: 0.9rem; }
+
+  /* ── Hero ──────────────────────────────────────────────────── */
+  .hero { min-height: 70vh; }
+  .hero-content { padding: 32px 16px; }
+  .hero-title { font-size: 2.2rem; }
+  .hero-desc { font-size: 0.95rem; }
+  .hero-cta { flex-direction: column; gap: 10px; }
+  .hero-cta .btn { width: 100%; justify-content: center; }
+
+  /* ── Grids → single column ─────────────────────────────────── */
+  .grid-4, .grid-3, .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* ── Cards ─────────────────────────────────────────────────── */
+  .card { padding: 20px; }
+  .stat-card { padding: 24px 16px; }
+  .stat-value { font-size: 2.2rem; }
+
+  /* ── Auth ──────────────────────────────────────────────────── */
+  .auth-card { padding: 28px 20px; margin: 0 4px; }
   .form-row { grid-template-columns: 1fr; }
-  thead th, tbody td { padding: 10px 12px; font-size: 0.85rem; }
-  .container { padding: 24px 16px; }
+
+  /* ── Tables → card-style on mobile ─────────────────────────── */
+  .table-wrapper { border-radius: 14px; overflow: hidden; }
+
+  table thead { display: none; }
+
+  table tbody tr {
+    display: block;
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 6px rgba(30,20,10,0.05);
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border2);
+    font-size: 0.88rem;
+  }
+  table tbody td:last-child { border-bottom: none; }
+
+  table tbody td::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text2);
+    flex-shrink: 0;
+    margin-right: 12px;
+  }
+
+  .action-group { flex-wrap: wrap; gap: 6px; }
+  .btn-sm { padding: 6px 14px; font-size: 0.75rem; }
+
+  /* ── Booking form ───────────────────────────────────────────── */
+  .form-row { grid-template-columns: 1fr; gap: 12px; }
+
+  /* ── Tab row ────────────────────────────────────────────────── */
+  .tab-row { flex-direction: row; }
+  .tab-btn { font-size: 0.78rem; padding: 8px 4px; }
+
+  /* ── OTP boxes ──────────────────────────────────────────────── */
+  .otp-box { width: 44px; height: 52px; font-size: 1.3rem; border-radius: 10px; }
+  .otp-input-row { gap: 7px; }
+
+  /* ── Book page ──────────────────────────────────────────────── */
+  .booking-summary { padding: 16px; }
+  .booking-detail { font-size: 0.85rem; }
+
+  /* ── Instruction modal ──────────────────────────────────────── */
+  .instr-modal { padding: 24px 16px; }
+  .instr-step { gap: 12px; }
+
+  /* ── Divider ────────────────────────────────────────────────── */
+  .divider { margin: 24px 0; }
+
+  /* ── Scroll progress bar ─────────────────────────────────────── */
+  #scroll-progress { height: 2px; }
+
+  /* ── Vehicle filter buttons ──────────────────────────────────── */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-row .btn { font-size: 0.75rem; padding: 6px 14px; }
+
+  /* ── Upload docs ─────────────────────────────────────────────── */
+  .progress-steps { gap: 0; }
+  .ps-line { width: 28px; }
+
+  /* ── Bottom safe area for iOS ────────────────────────────────── */
+  .container { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 400px) {
+  .hero-title { font-size: 1.8rem; }
+  .auth-card { padding: 24px 14px; }
+  .otp-box { width: 38px; height: 46px; font-size: 1.1rem; }
+  .otp-input-row { gap: 5px; }
+  .navbar-brand { font-size: 1rem; }
 }

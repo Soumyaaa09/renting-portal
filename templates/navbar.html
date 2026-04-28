@@ -3,10 +3,33 @@
     <div class="brand-icon">🚗</div>
     Drive<span>Now</span>
   </a>
-  <div class="navbar-links">
+
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <div class="navbar-links" id="navbar-links">
     <a href="/dashboard">Home</a>
     <a href="/vehicles">Fleet</a>
     <a href="/my-bookings">My Bookings</a>
     <a href="/logout" class="logout">Logout</a>
   </div>
 </nav>
+
+<script>
+  const toggle = document.getElementById('nav-toggle');
+  const links  = document.getElementById('navbar-links');
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('open');
+    links.classList.toggle('open');
+  });
+  // Close on link click
+  links.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      toggle.classList.remove('open');
+      links.classList.remove('open');
+    });
+  });
+</script>

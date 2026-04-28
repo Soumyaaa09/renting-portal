@@ -9,13 +9,14 @@
 <body>
   <canvas id="particle-canvas"></canvas>
 
-  <!-- Admin Navbar -->
   <nav class="navbar">
     <a href="/admin" class="navbar-brand">
       <div class="brand-icon">⚙️</div>
-      Drive<span>Now</span> <span style="font-size:0.65rem; color:var(--glow2); margin-left:6px; border:1px solid rgba(245,158,11,0.3); padding:2px 8px; border-radius:4px;">ADMIN</span>
+      Drive<span>Now</span>
+      <span style="font-size:0.6rem; color:#d97706; margin-left:6px; border:1px solid rgba(217,119,6,0.3); padding:2px 7px; border-radius:4px;">ADMIN</span>
     </a>
-    <div class="navbar-links">
+    <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    <div class="navbar-links" id="navbar-links">
       <a href="/admin">Dashboard</a>
       <a href="/admin/bookings">Bookings</a>
       <a href="/admin/add-vehicle">Add Vehicle</a>
@@ -24,78 +25,63 @@
   </nav>
 
   <div class="container">
-
     <div class="page-header fade-up">
       <div class="section-label">Control Centre</div>
       <h1 class="page-title">Admin <span class="accent">Dashboard</span></h1>
       <p class="page-subtitle">Overview of all bookings and platform activity.</p>
     </div>
 
-    <!-- Stats -->
     <div class="grid grid-4">
-
       <div class="card stat-card fade-up delay-1">
         <span class="stat-icon">📊</span>
         <div class="stat-value">{{ total }}</div>
         <div class="stat-label">Total Bookings</div>
       </div>
-
       <div class="card stat-card fade-up delay-2">
         <span class="stat-icon">⏳</span>
         <div class="stat-value orange">{{ pending }}</div>
         <div class="stat-label">Pending</div>
       </div>
-
       <div class="card stat-card fade-up delay-3">
         <span class="stat-icon">✅</span>
         <div class="stat-value green">{{ approved }}</div>
         <div class="stat-label">Approved</div>
       </div>
-
       <div class="card stat-card fade-up delay-4">
         <span class="stat-icon">❌</span>
         <div class="stat-value red">{{ rejected }}</div>
         <div class="stat-label">Rejected</div>
       </div>
-
     </div>
 
     <div class="divider"></div>
 
-    <!-- Quick actions -->
     <div class="page-header fade-up">
       <div class="section-label">Admin Actions</div>
       <div class="page-title" style="font-size:1.4rem;">Quick Actions</div>
     </div>
 
     <div class="grid grid-2 fade-up delay-1">
-
-      <a href="/admin/bookings" class="card" style="text-decoration:none; padding:36px;">
-        <div style="font-size:2.4rem; margin-bottom:16px;">📋</div>
+      <a href="/admin/bookings" class="card" style="text-decoration:none; padding:28px;">
+        <div style="font-size:2rem; margin-bottom:14px;">📋</div>
         <div class="vehicle-name" style="margin-bottom:8px;">Manage Bookings</div>
-        <div style="color:var(--text2); font-size:0.95rem; line-height:1.6;">
-          Review, approve or reject customer booking requests.
-        </div>
-        <div style="margin-top:20px;">
-          <span class="btn" style="padding:8px 20px; font-size:0.72rem;">Open →</span>
-        </div>
+        <div style="color:#6b6058; font-size:0.92rem; line-height:1.6;">Review, approve or reject customer booking requests.</div>
+        <div style="margin-top:16px;"><span class="btn" style="padding:8px 18px; font-size:0.75rem;">Open →</span></div>
       </a>
-
-      <a href="/admin/add-vehicle" class="card" style="text-decoration:none; padding:36px;">
-        <div style="font-size:2.4rem; margin-bottom:16px;">🚗</div>
+      <a href="/admin/add-vehicle" class="card" style="text-decoration:none; padding:28px;">
+        <div style="font-size:2rem; margin-bottom:14px;">🚗</div>
         <div class="vehicle-name" style="margin-bottom:8px;">Add New Vehicle</div>
-        <div style="color:var(--text2); font-size:0.95rem; line-height:1.6;">
-          Register a new vehicle to the fleet for customers to book.
-        </div>
-        <div style="margin-top:20px;">
-          <span class="btn" style="padding:8px 20px; font-size:0.72rem;">Add →</span>
-        </div>
+        <div style="color:#6b6058; font-size:0.92rem; line-height:1.6;">Register a new vehicle to the fleet for customers to book.</div>
+        <div style="margin-top:16px;"><span class="btn" style="padding:8px 18px; font-size:0.75rem;">Add →</span></div>
       </a>
-
     </div>
-
   </div>
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+  <script>
+    const toggle = document.getElementById('nav-toggle');
+    const links  = document.getElementById('navbar-links');
+    toggle.addEventListener('click', () => { toggle.classList.toggle('open'); links.classList.toggle('open'); });
+  </script>
 </body>
 </html>
