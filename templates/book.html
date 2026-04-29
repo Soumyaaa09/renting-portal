@@ -22,8 +22,8 @@
       position: fixed;
       inset: 0;
       z-index: 10000;
-      background: rgba(2, 6, 16, 0.92);
-      backdrop-filter: blur(16px) saturate(180%);
+      background: rgba(26, 22, 18, 0.55);
+      backdrop-filter: blur(12px) saturate(160%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -41,15 +41,15 @@
     /* ── Modal box ─────────────────────────────────────────── */
     #instr-box {
       position: relative;
-      background: rgba(5, 12, 30, 0.98);
-      border: 1px solid rgba(0,210,255,0.28);
-      border-radius: 28px;
+      background: #ffffff;
+      border: 1px solid rgba(30,20,10,0.1);
+      border-radius: 24px;
       padding: 44px 40px 36px;
       max-width: 520px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.85), 0 0 60px rgba(0,210,255,0.1), 0 0 120px rgba(168,85,247,0.06);
+      box-shadow: 0 24px 80px rgba(30,20,10,0.18), 0 4px 16px rgba(30,20,10,0.08);
       animation: boxIn 0.55s cubic-bezier(0.23,1,0.32,1) both;
       transition: transform 0.12s ease;
     }
@@ -57,82 +57,82 @@
       animation: boxOut 0.38s cubic-bezier(0.55,0,1,0.45) forwards;
     }
     @keyframes boxIn {
-      from { opacity:0; transform: perspective(900px) rotateX(20deg) translateY(60px) scale(0.92); }
+      from { opacity:0; transform: perspective(900px) rotateX(16deg) translateY(50px) scale(0.94); }
       to   { opacity:1; transform: perspective(900px) rotateX(0)     translateY(0)    scale(1); }
     }
     @keyframes boxOut {
-      to { opacity:0; transform: perspective(900px) rotateX(-16deg) translateY(50px) scale(0.9); }
+      to { opacity:0; transform: perspective(900px) rotateX(-12deg) translateY(40px) scale(0.92); }
     }
     #instr-box::before {
       content:'';
-      position:absolute; top:-1px; left:10%; right:10%; height:2px;
-      background: linear-gradient(90deg, transparent, var(--glow), var(--glow3), var(--glow), transparent);
-      border-radius:2px;
-      animation: arcPulse 3s ease-in-out infinite;
+      position:absolute; top:0; left:10%; right:10%; height:3px;
+      background: linear-gradient(90deg, transparent, #c8522a, #8b6f47, #c8522a, transparent);
+      border-radius: 0 0 3px 3px;
+      opacity: 0.7;
     }
-    @keyframes arcPulse { 0%,100%{opacity:.55} 50%{opacity:1;filter:blur(1px)} }
     #instr-box::-webkit-scrollbar { width:4px; }
-    #instr-box::-webkit-scrollbar-thumb { background:rgba(0,210,255,.2); border-radius:2px; }
+    #instr-box::-webkit-scrollbar-thumb { background:rgba(30,20,10,.15); border-radius:2px; }
 
     /* Close X */
     #btn-close-instr {
       position:absolute; top:14px; right:14px;
       width:32px; height:32px;
-      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
-      border-radius:8px; color:var(--text2); font-size:1rem;
+      background:rgba(30,20,10,.05); border:1px solid rgba(30,20,10,.1);
+      border-radius:8px; color:#6b6058; font-size:1rem;
       cursor:pointer; display:grid; place-items:center; transition:all .2s;
     }
-    #btn-close-instr:hover { background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.35); color:#ef4444; }
+    #btn-close-instr:hover { background:rgba(220,38,38,.08); border-color:rgba(220,38,38,.2); color:#dc2626; }
 
     /* Progress dots */
     .instr-progress { display:flex; justify-content:center; gap:6px; margin-bottom:24px; }
-    .prog-dot { width:6px; height:6px; border-radius:50%; background:rgba(0,210,255,.18); transition:all .35s ease; }
-    .prog-dot.active { background:var(--glow); box-shadow:0 0 8px var(--glow); width:22px; border-radius:3px; }
+    .prog-dot { width:6px; height:6px; border-radius:50%; background:rgba(30,20,10,.12); transition:all .35s ease; }
+    .prog-dot.active { background:#c8522a; width:22px; border-radius:3px; }
 
     /* Header */
     .instr-header { display:flex; align-items:center; gap:16px; margin-bottom:28px; }
     .instr-icon-wrap {
       flex-shrink:0; width:56px; height:56px;
-      background:linear-gradient(135deg,rgba(0,210,255,.18),rgba(168,85,247,.14));
-      border:1px solid rgba(0,210,255,.28); border-radius:16px;
+      background: linear-gradient(135deg, rgba(200,82,42,0.1), rgba(139,111,71,0.1));
+      border:1px solid rgba(200,82,42,0.2); border-radius:16px;
       display:grid; place-items:center; font-size:1.6rem;
       animation:iconFloat 3.5s ease-in-out infinite;
-      box-shadow:0 0 20px rgba(0,210,255,.12);
     }
     @keyframes iconFloat { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-5px) rotate(2deg)} }
-    .instr-heading { font-family:var(--font-head); font-size:1.2rem; font-weight:800; letter-spacing:.05em; color:#fff; line-height:1.2; }
-    .instr-heading .accent-text { background:linear-gradient(135deg,var(--glow),var(--glow3)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .instr-sub { font-size:.82rem; color:var(--text2); margin-top:3px; }
+    .instr-heading { font-family:var(--font-head); font-size:1.2rem; font-weight:800; letter-spacing:.02em; color:#1a1612; line-height:1.2; }
+    .instr-heading .accent-text { color:#c8522a; }
+    .instr-sub { font-size:.82rem; color:#6b6058; margin-top:3px; }
 
     /* Steps */
-    .instr-steps { list-style:none; display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+    .instr-steps { list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
     .instr-step {
       display:flex; align-items:flex-start; gap:14px;
       padding:14px 16px;
-      background:rgba(0,210,255,.03); border:1px solid rgba(0,210,255,.09);
+      background: rgba(30,20,10,0.02);
+      border:1px solid rgba(30,20,10,0.07);
       border-radius:12px;
       opacity:0; transform:translateX(-20px);
       transition:border-color .3s, background .3s;
     }
     .instr-step.step-in { animation:stepSlide .45s cubic-bezier(.23,1,.32,1) forwards; }
     @keyframes stepSlide { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
-    .instr-step:hover { border-color:rgba(0,210,255,.25); background:rgba(0,210,255,.07); }
+    .instr-step:hover { border-color:rgba(200,82,42,0.2); background:rgba(200,82,42,0.03); }
     .step-num {
       flex-shrink:0; width:26px; height:26px;
-      background:linear-gradient(135deg,var(--glow),var(--glow3)); border-radius:7px;
+      background: #1a1612;
+      border-radius:7px;
       display:grid; place-items:center;
-      font-family:var(--font-head); font-size:.65rem; font-weight:800; color:#000; margin-top:2px;
+      font-family:var(--font-head); font-size:.65rem; font-weight:800; color:#fff; margin-top:2px;
     }
-    .step-title { font-family:var(--font-head); font-size:.75rem; font-weight:700; letter-spacing:.06em; color:#fff; margin-bottom:4px; }
-    .step-desc { font-size:.875rem; color:var(--text2); line-height:1.55; }
-    .step-desc strong { color:var(--glow); font-weight:700; }
+    .step-title { font-family:var(--font-head); font-size:.75rem; font-weight:700; letter-spacing:.04em; color:#1a1612; margin-bottom:4px; }
+    .step-desc { font-size:.875rem; color:#6b6058; line-height:1.55; }
+    .step-desc strong { color:#c8522a; font-weight:700; }
 
     /* Warning */
     .instr-warning {
       display:flex; align-items:flex-start; gap:10px;
-      background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.22);
+      background:rgba(217,119,6,0.06); border:1px solid rgba(217,119,6,0.18);
       border-radius:10px; padding:12px 16px;
-      font-size:.875rem; color:#fcd34d; margin-bottom:22px; line-height:1.55;
+      font-size:.875rem; color:#92400e; margin-bottom:22px; line-height:1.55;
     }
     .warn-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
 
@@ -140,46 +140,47 @@
     .instr-agree { display:flex; align-items:center; gap:12px; margin-bottom:22px; cursor:pointer; user-select:none; }
     .instr-agree input[type="checkbox"] {
       appearance:none; -webkit-appearance:none;
-      width:20px; height:20px; border:2px solid rgba(0,210,255,.3);
-      border-radius:6px; background:rgba(0,210,255,.05);
+      width:20px; height:20px; border:2px solid rgba(30,20,10,0.2);
+      border-radius:6px; background:#fff;
       cursor:pointer; flex-shrink:0; transition:all .25s; position:relative;
     }
     .instr-agree input[type="checkbox"]:checked {
-      background:linear-gradient(135deg,var(--glow),var(--glow3));
-      border-color:var(--glow); box-shadow:0 0 14px rgba(0,210,255,.4);
+      background: #1a1612;
+      border-color: #1a1612;
     }
     .instr-agree input[type="checkbox"]:checked::after {
       content:'✓'; position:absolute; inset:0;
-      display:grid; place-items:center; font-size:.68rem; font-weight:900; color:#000;
+      display:grid; place-items:center; font-size:.68rem; font-weight:900; color:#fff;
     }
-    .agree-label { font-size:.88rem; color:var(--text2); line-height:1.45; }
-    .agree-label a { color:var(--glow); text-decoration:none; font-weight:700; }
+    .agree-label { font-size:.88rem; color:#6b6058; line-height:1.45; }
+    .agree-label a { color:#c8522a; text-decoration:none; font-weight:700; }
 
     /* CTA */
     .instr-cta { display:flex; gap:12px; }
     #btn-proceed {
       flex:1; padding:14px 20px;
       font-family:var(--font-head); font-size:.78rem; font-weight:800;
-      letter-spacing:.1em; text-transform:uppercase;
+      letter-spacing:.08em; text-transform:uppercase;
       border:none; border-radius:12px; cursor:not-allowed;
       position:relative; overflow:hidden; transition:all .3s ease;
-      background:linear-gradient(135deg,#003344,#001a22);
-      color:rgba(0,210,255,.3);
+      background: rgba(30,20,10,0.07);
+      color: rgba(30,20,10,0.3);
     }
     #btn-proceed.ready {
-      background:linear-gradient(135deg,var(--glow),#0095be);
-      color:#000; cursor:pointer;
-      box-shadow:0 0 20px rgba(0,210,255,.3);
+      background: #1a1612;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(30,20,10,0.25);
     }
     #btn-proceed.ready:hover {
-      background:linear-gradient(135deg,#00e5ff,var(--glow));
-      box-shadow:0 0 35px rgba(0,210,255,.55), 0 8px 24px rgba(0,0,0,.4);
-      transform:translateY(-2px) scale(1.01);
+      background: #2d241c;
+      box-shadow: 0 8px 32px rgba(30,20,10,0.35);
+      transform: translateY(-2px);
     }
     #btn-proceed.ready:active { transform:translateY(0); }
     #btn-proceed::before {
       content:''; position:absolute; inset:0;
-      background:linear-gradient(90deg,transparent 20%,rgba(255,255,255,.15) 50%,transparent 80%);
+      background:linear-gradient(90deg,transparent 20%,rgba(255,255,255,.12) 50%,transparent 80%);
       transform:translateX(-100%); transition:transform .55s ease;
     }
     #btn-proceed.ready:hover::before { transform:translateX(100%); }
@@ -188,14 +189,14 @@
       padding:14px 22px;
       font-family:var(--font-head); font-size:.78rem; font-weight:700;
       letter-spacing:.08em; text-transform:uppercase;
-      background:transparent; border:1px solid rgba(0,210,255,.18);
-      border-radius:12px; color:var(--text2); cursor:pointer;
+      background:transparent; border:1px solid rgba(30,20,10,0.12);
+      border-radius:12px; color:#6b6058; cursor:pointer;
       text-decoration:none; display:grid; place-items:center; transition:all .25s;
     }
-    #btn-back:hover { border-color:rgba(239,68,68,.4); color:#ef4444; background:rgba(239,68,68,.06); }
+    #btn-back:hover { border-color:rgba(220,38,38,.3); color:#dc2626; background:rgba(220,38,38,.05); }
 
     @media (max-width:540px) {
-      #instr-box { padding:32px 18px 28px; }
+      #instr-box { padding:28px 16px 24px; }
       .instr-heading { font-size:1rem; }
       .instr-cta { flex-direction:column; }
     }
@@ -379,6 +380,13 @@
 
     // Lock body scroll while modal open
     document.body.style.overflow = 'hidden';
+
+    {% if show_form %}
+    // Error came from form submission — skip popup immediately
+    overlay.remove();
+    bookingPage.classList.add('revealed');
+    document.body.style.overflow = '';
+    {% endif %}
 
     /* ── Stagger steps in ───────────────────────────────────── */
     document.querySelectorAll('.instr-step').forEach((step, i) => {

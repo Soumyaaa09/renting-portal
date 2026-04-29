@@ -383,9 +383,9 @@ def book(vehicle_id):
         aadhaar_file = request.files.get('aadhaar_file')
 
         if not dl_file or dl_file.filename == '':
-            return render_template('book.html', vehicle=vehicle, message="Please upload your Driving Licence.")
+            return render_template('book.html', vehicle=vehicle, message="Please upload your Driving Licence.", show_form=True)
         if not aadhaar_file or aadhaar_file.filename == '':
-            return render_template('book.html', vehicle=vehicle, message="Please upload your Aadhaar Card.")
+            return render_template('book.html', vehicle=vehicle, message="Please upload your Aadhaar Card.", show_form=True)
 
         uid = str(session['user_id'])
         try:
@@ -410,9 +410,8 @@ def book(vehicle_id):
         start = datetime.strptime(start_time, "%H:%M")
         end = datetime.strptime(end_time, "%H:%M")
 
-        # ❌ invalid time
         if end <= start:
-            return render_template('book.html', vehicle=vehicle, message="Invalid time selection")
+            return render_template('book.html', vehicle=vehicle, message="End time must be after start time.", show_form=True)
 
         # 🚫 overlap check — check by vehicle_id OR vehicle_name to cover old bookings
         existing = supabase.table("bookings") \
@@ -424,12 +423,12 @@ def book(vehicle_id):
             .execute().data
 
         for b in existing:
-            b_start = b['start_time'][:5]  # trim seconds if present e.g. "10:00:00" -> "10:00"
+            b_start = b['start_time'][:5]
             b_end   = b['end_time'][:5]
             s_start = start_time[:5]
             s_end   = end_time[:5]
             if s_start < b_end and s_end > b_start:
-                return render_template('book.html', vehicle=vehicle,
+                return render_template('book.html', vehicle=vehicle, show_form=True,
                     message=f"⚠ This vehicle is already booked from {b_start} to {b_end} on this date. Please choose a different time slot.")
 
         # 💰 price calculation
