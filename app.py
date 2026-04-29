@@ -183,6 +183,54 @@ def resend_otp():
 
 
 
+# ---------------- MAINTENANCE MODE ─────────────────────────
+def is_maintenance():
+    try:
+        row = supabase.table("settings").select("value").eq("key", "maintenance_mode").execute().data
+        return row and row[0]['value'] == 'true'
+    except Exception:
+        return False
+
+@app.before_request
+def check_maintenance():
+    # Skip for admin routes, static files, login, logout
+    allowed = ['/admin', '/login', '/logout', '/register', '/verify-otp',
+               '/resend-otp', '/static']
+    if any(request.path.startswith(p) for p in allowed):
+        return None
+    # Also skip if user is admin
+    if session.get('role') == 'admin':
+        return None
+    if is_maintenance():
+        return render_template('maintenance.html'), 503
+
+
+@app.route('/admin/maintenance/on',  methods=['POST'])
+def maintenance_on():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    try:
+        existing = supabase.table("settings").select("id").eq("key", "maintenance_mode").execute().data
+        if existing:
+            supabase.table("settings").update({"value": "true"}).eq("key", "maintenance_mode").execute()
+        else:
+            supabase.table("settings").insert({"key": "maintenance_mode", "value": "true"}).execute()
+    except Exception:
+        pass
+    return redirect('/admin')
+
+
+@app.route('/admin/maintenance/off', methods=['POST'])
+def maintenance_off():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+    try:
+        supabase.table("settings").update({"value": "false"}).eq("key", "maintenance_mode").execute()
+    except Exception:
+        pass
+    return redirect('/admin')
+
+
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
@@ -484,7 +532,8 @@ def admin():
                            total=total,
                            pending=pending,
                            approved=approved,
-                           rejected=rejected)
+                           rejected=rejected,
+                           maintenance=is_maintenance())
 
 
 # ---------------- ADMIN BOOKINGS ----------------

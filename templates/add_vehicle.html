@@ -9,22 +9,24 @@
 <body>
   <canvas id="particle-canvas"></canvas>
 
-  <!-- Admin Navbar -->
   <nav class="navbar">
     <a href="/admin" class="navbar-brand">
       <div class="brand-icon">⚙️</div>
-      Drive<span>Now</span> <span style="font-size:0.65rem; color:var(--glow2); margin-left:6px; border:1px solid rgba(245,158,11,0.3); padding:2px 8px; border-radius:4px;">ADMIN</span>
+      Drive<span>Now</span>
+      <span style="font-size:0.6rem; color:#d97706; margin-left:6px; border:1px solid rgba(217,119,6,0.3); padding:2px 7px; border-radius:4px;">ADMIN</span>
     </a>
-    <div class="navbar-links">
+    <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    <div class="navbar-links" id="navbar-links">
       <a href="/admin">Dashboard</a>
       <a href="/admin/bookings">Bookings</a>
+      <a href="/admin/vehicles">Fleet</a>
       <a href="/admin/add-vehicle">Add Vehicle</a>
       <a href="/logout" class="logout">Logout</a>
     </div>
   </nav>
 
   <div class="container">
-    <div style="max-width: 520px; margin: 0 auto;">
+    <div style="max-width:520px; margin:0 auto;">
 
       <div class="page-header fade-up">
         <div class="section-label">Admin → Fleet</div>
@@ -32,43 +34,41 @@
         <p class="page-subtitle">Register a new vehicle to make it available for booking.</p>
       </div>
 
-      <div class="card fade-up delay-1" style="padding: 36px;">
+      <div class="card fade-up delay-1" style="padding:36px;">
         <form method="POST" enctype="multipart/form-data">
 
           <div class="form-group">
             <label class="form-label">Vehicle Name</label>
-            <input class="form-input" type="text" name="name" placeholder="e.g. Honda City, Royal Enfield…" required>
+            <input class="form-input" type="text" name="name"
+              placeholder="e.g. Honda City, Royal Enfield…" required>
           </div>
 
           <div class="form-group">
             <label class="form-label">Vehicle Type</label>
-            <input class="form-input" type="text" name="type" placeholder="Car / Bike / SUV / Van" required>
+            <select class="form-input" name="type" required>
+              <option value="">Select type…</option>
+              <option value="car">Car</option>
+              <option value="bike">Bike</option>
+              <option value="suv">SUV</option>
+              <option value="van">Van</option>
+            </select>
           </div>
 
           <div class="form-group">
             <label class="form-label">Price per Hour (₹)</label>
-            <input class="form-input" type="number" name="price" placeholder="e.g. 250" min="1" required>
+            <input class="form-input" type="number" name="price"
+              placeholder="e.g. 250" min="1" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Vehicle Photo <span style="color:var(--text2); font-weight:400;">(optional)</span></label>
-            <div id="img-area" style="border:2px dashed rgba(0,210,255,0.25); border-radius:12px;
-                padding:24px; text-align:center; cursor:pointer; transition:all 0.25s;
-                background:rgba(0,210,255,0.03); position:relative;">
-              <input type="file" name="image_file" id="image_file" accept="image/*"
-                style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
-              <div style="font-size:2rem; margin-bottom:8px;">🚗</div>
-              <div style="font-size:0.8rem; color:var(--text2);">Click or drag & drop a vehicle photo</div>
-              <div id="img-filename" style="display:none; margin-top:8px; font-size:0.78rem;
-                  color:var(--glow); font-weight:600;"></div>
-              <img id="img-preview" src="" alt="" style="display:none; margin-top:12px;
-                  max-height:160px; border-radius:8px; object-fit:cover; width:100%;">
-            </div>
+            <label class="form-label">Vehicle Image <span style="color:var(--text2); font-weight:400;">(optional)</span></label>
+            <input class="form-input" type="file" name="image_file"
+              accept="image/*" style="padding:10px;">
           </div>
 
-          <div style="margin-top: 8px; display:flex; gap:12px; flex-wrap:wrap;">
+          <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap;">
             <button type="submit" class="btn btn-primary">Add to Fleet →</button>
-            <a href="/admin" class="btn">Cancel</a>
+            <a href="/admin/vehicles" class="btn">Cancel</a>
           </div>
 
         </form>
@@ -79,24 +79,9 @@
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
   <script>
-    const input   = document.getElementById('image_file');
-    const area    = document.getElementById('img-area');
-    const fname   = document.getElementById('img-filename');
-    const preview = document.getElementById('img-preview');
-
-    input.addEventListener('change', () => {
-      if (input.files && input.files[0]) {
-        fname.textContent = '✓ ' + input.files[0].name;
-        fname.style.display = 'block';
-        const reader = new FileReader();
-        reader.onload = e => {
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-        area.style.borderColor = 'rgba(0,210,255,0.5)';
-      }
-    });
+    const toggle = document.getElementById('nav-toggle');
+    const links  = document.getElementById('navbar-links');
+    toggle.addEventListener('click', () => { toggle.classList.toggle('open'); links.classList.toggle('open'); });
   </script>
 </body>
 </html>

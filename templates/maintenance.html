@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Under Maintenance — DriveNow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .maint-card {
+      background: #fff;
+      border: 1px solid rgba(30,20,10,0.1);
+      border-radius: 28px;
+      padding: 60px 48px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 80px rgba(30,20,10,0.12);
+      position: relative;
+      overflow: hidden;
+      animation: cardIn 0.65s cubic-bezier(0.23,1,0.32,1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(40px) scale(0.96); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .maint-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #c8522a, #8b6f47, #c8522a, transparent);
+      border-radius: 0 0 3px 3px;
+    }
+
+    .maint-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+      display: block;
+      animation: wrenchWobble 2.5s ease-in-out infinite;
+    }
+    @keyframes wrenchWobble {
+      0%,100% { transform: rotate(-10deg); }
+      50%      { transform: rotate(10deg); }
+    }
+
+    .maint-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #1a1612;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .maint-subtitle {
+      font-size: 0.95rem;
+      color: #6b6058;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .maint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(200,82,42,0.07);
+      border: 1px solid rgba(200,82,42,0.18);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #c8522a;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .maint-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #c8522a;
+      animation: blink 1.5s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .progress-bar-wrap {
+      background: rgba(30,20,10,0.06);
+      border-radius: 999px;
+      height: 4px;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 65%;
+      background: linear-gradient(90deg, #c8522a, #8b6f47);
+      border-radius: 999px;
+      animation: progressPulse 2s ease-in-out infinite;
+    }
+    @keyframes progressPulse {
+      0%,100% { width: 55%; opacity: 0.8; }
+      50%      { width: 75%; opacity: 1; }
+    }
+
+    .maint-footer {
+      font-size: 0.82rem;
+      color: #6b6058;
+    }
+    .maint-footer a {
+      color: #c8522a;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+      .maint-card { padding: 40px 24px; }
+      .maint-title { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="maint-card">
+    <span class="maint-icon">🔧</span>
+
+    <div class="maint-badge">Under Maintenance</div>
+
+    <div class="maint-title">We'll be back soon</div>
+    <p class="maint-subtitle">
+      DriveNow is currently undergoing scheduled maintenance.<br>
+      We're working hard to improve your experience.<br>
+      Please check back in a little while.
+    </p>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill"></div>
+    </div>
+
+    <div class="maint-footer">
+      Already have an account? <a href="/login">Admin Login →</a>
+    </div>
+  </div>
+</body>
+</html>

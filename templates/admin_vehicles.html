@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Fleet — DriveNow Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <nav class="navbar">
+    <a href="/admin" class="navbar-brand">
+      <div class="brand-icon">⚙️</div>
+      Drive<span>Now</span>
+      <span style="font-size:0.6rem; color:#d97706; margin-left:6px; border:1px solid rgba(217,119,6,0.3); padding:2px 7px; border-radius:4px;">ADMIN</span>
+    </a>
+    <button class="nav-toggle" id="nav-toggle"><span></span><span></span><span></span></button>
+    <div class="navbar-links" id="navbar-links">
+      <a href="/admin">Dashboard</a>
+      <a href="/admin/bookings">Bookings</a>
+      <a href="/admin/vehicles">Fleet</a>
+      <a href="/admin/add-vehicle">Add Vehicle</a>
+      <a href="/logout" class="logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="page-header fade-up">
+      <div class="section-label">Admin → Fleet</div>
+      <h1 class="page-title">Manage <span class="accent">Fleet</span></h1>
+      <p class="page-subtitle">Edit or remove vehicles from the rental fleet.</p>
+    </div>
+
+    <div style="margin-bottom: 24px;" class="fade-up">
+      <a href="/admin/add-vehicle" class="btn btn-primary">+ Add New Vehicle</a>
+    </div>
+
+    {% if vehicles %}
+    <div class="table-wrapper fade-up delay-1">
+      <table>
+        <thead>
+          <tr>
+            <th>Vehicle Name</th>
+            <th>Type</th>
+            <th>Price / Hr</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in vehicles %}
+          <tr>
+            <td data-label="Vehicle">
+              <div style="font-weight:700; color:#1a1612;">{{ v.name }}</div>
+            </td>
+            <td data-label="Type">
+              <span style="text-transform:capitalize;">{{ v.type }}</span>
+            </td>
+            <td data-label="Price">
+              <span style="font-family:var(--font-head); font-weight:700; color:#c8522a;">₹{{ v.price }} / hr</span>
+            </td>
+            <td data-label="Actions">
+              <div class="action-group">
+                <a href="/admin/edit-vehicle/{{ v.id }}" class="btn btn-sm" style="border-color:rgba(30,20,10,0.15);">✏ Edit</a>
+                <form method="POST" action="/admin/delete-vehicle/{{ v.id }}" style="display:inline;"
+                  onsubmit="return confirm('Delete {{ v.name }}? This cannot be undone.')">
+                  <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state fade-up">
+      <div class="empty-icon">🚗</div>
+      <div class="empty-title">No vehicles yet</div>
+      <div class="empty-desc">Add your first vehicle to get started.</div>
+      <br>
+      <a href="/admin/add-vehicle" class="btn btn-primary">Add Vehicle →</a>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <script src="{{ url_for('static', filename='main3d.js') }}"></script>
+  <script>
+    const toggle = document.getElementById('nav-toggle');
+    const links  = document.getElementById('navbar-links');
+    toggle.addEventListener('click', () => { toggle.classList.toggle('open'); links.classList.toggle('open'); });
+  </script>
+</body>
+</html>
