@@ -436,6 +436,8 @@ def book(vehicle_id):
             return render_template('book.html', vehicle=vehicle, message="Please upload your Aadhaar Card.", show_form=True)
 
         uid = str(session['user_id'])
+        dl_url = None
+        aadhaar_url = None
         try:
             dl_ext  = dl_file.filename.rsplit('.', 1)[-1].lower()
             dl_path = f"{uid}/dl_{uuid.uuid4().hex}.{dl_ext}"
@@ -483,7 +485,7 @@ def book(vehicle_id):
         hours = (end - start).seconds / 3600
         total_price = int(hours * vehicle['price'])
 
-        supabase.table("bookings").insert({
+        booking_data = {
             "user_id": session['user_id'],
             "user_name": session['user_name'],
             "vehicle_id": vehicle_id,
@@ -492,8 +494,18 @@ def book(vehicle_id):
             "booking_date": booking_date,
             "start_time": start_time,
             "end_time": end_time,
-            "status": "pending"
-        }).execute()
+            "status": "pending",
+            "dl_url": dl_url,
+            "aadhaar_url": aadhaar_url
+        }
+
+        try:
+            supabase.table("bookings").insert(booking_data).execute()
+        except Exception:
+            # Older databases may not have booking-level document columns yet.
+            booking_data.pop("dl_url", None)
+            booking_data.pop("aadhaar_url", None)
+            supabase.table("bookings").insert(booking_data).execute()
 
         return redirect('/my-bookings')
 
@@ -534,6 +546,16 @@ def admin():
                            approved=approved,
                            rejected=rejected,
                            maintenance=is_maintenance())
+
+
+# ---------------- ADMIN DOCUMENTS ----------------
+@app.route('/admin/documents')
+def admin_documents():
+    if session.get('role') != 'admin':
+        return redirect('/login')
+
+    bookings = supabase.table("bookings").select("*").order("id", desc=True).execute().data
+    return render_template('admin_documents.html', bookings=bookings)
 
 
 # ---------------- ADMIN BOOKINGS ----------------

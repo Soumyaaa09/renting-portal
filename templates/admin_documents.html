@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Bookings — DriveNow Admin</title>
+  <title>Booking Documents - DriveNow Admin</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
 </head>
 <body>
@@ -20,6 +20,7 @@
       <a href="/admin">Dashboard</a>
       <a href="/admin/bookings">Bookings</a>
       <a href="/admin/documents">Documents</a>
+      <a href="/admin/vehicles">Fleet</a>
       <a href="/admin/add-vehicle">Add Vehicle</a>
       <a href="/logout" class="logout">Logout</a>
     </div>
@@ -27,9 +28,9 @@
 
   <div class="container">
     <div class="page-header fade-up">
-      <div class="section-label">Admin → Bookings</div>
-      <h1 class="page-title">Booking <span class="accent">Requests</span></h1>
-      <p class="page-subtitle">Approve or reject customer booking requests below.</p>
+      <div class="section-label">Admin → Booking Documents</div>
+      <h1 class="page-title">Booking <span class="accent">Documents</span></h1>
+      <p class="page-subtitle">View the DL and Aadhaar files uploaded while booking a vehicle.</p>
     </div>
 
     {% if bookings %}
@@ -41,10 +42,8 @@
             <th>Vehicle</th>
             <th>Date</th>
             <th>Time Slot</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Documents</th>
-            <th>Action</th>
+            <th>Driving Licence</th>
+            <th>Aadhaar Card</th>
           </tr>
         </thead>
         <tbody>
@@ -55,43 +54,21 @@
             <td data-label="Date">{{ b.booking_date }}</td>
             <td data-label="Time Slot">
               <span style="color:#c8522a; font-family:var(--font-head); font-size:0.82rem; font-weight:600;">
-                {{ b.start_time }} – {{ b.end_time }}
+                {{ b.start_time }} - {{ b.end_time }}
               </span>
             </td>
-            <td data-label="Total">
-              <span style="font-family:var(--font-head); font-weight:700;">₹{{ b.price }}</span>
-            </td>
-            <td data-label="Status">
-              {% if b.status == 'pending' %}
-                <span class="badge badge-pending">Pending</span>
-              {% elif b.status == 'approved' %}
-                <span class="badge badge-approved">Approved</span>
-              {% else %}
-                <span class="badge badge-rejected">Rejected</span>
-              {% endif %}
-            </td>
-            <td data-label="Documents">
-              {% if b.dl_url or b.aadhaar_url %}
-              <div class="action-group">
-                {% if b.dl_url %}
-                <a href="{{ b.dl_url }}" target="_blank" rel="noopener" class="btn btn-sm">DL</a>
-                {% endif %}
-                {% if b.aadhaar_url %}
-                <a href="{{ b.aadhaar_url }}" target="_blank" rel="noopener" class="btn btn-sm">Aadhaar</a>
-                {% endif %}
-              </div>
+            <td data-label="Driving Licence">
+              {% if b.dl_url %}
+              <a href="{{ b.dl_url }}" target="_blank" rel="noopener" class="btn btn-sm">View DL</a>
               {% else %}
               <span style="color:var(--text2); font-size:0.82rem;">Not uploaded</span>
               {% endif %}
             </td>
-            <td data-label="Action">
-              {% if b.status == 'pending' %}
-              <div class="action-group">
-                <a href="/approve/{{ b.id }}" class="btn btn-success btn-sm">✓ Approve</a>
-                <a href="/reject/{{ b.id }}"  class="btn btn-danger  btn-sm">✕ Reject</a>
-              </div>
+            <td data-label="Aadhaar Card">
+              {% if b.aadhaar_url %}
+              <a href="{{ b.aadhaar_url }}" target="_blank" rel="noopener" class="btn btn-sm">View Aadhaar</a>
               {% else %}
-              <span style="color:var(--text2); font-size:0.82rem;">—</span>
+              <span style="color:var(--text2); font-size:0.82rem;">Not uploaded</span>
               {% endif %}
             </td>
           </tr>
@@ -99,12 +76,11 @@
         </tbody>
       </table>
     </div>
-
     {% else %}
     <div class="empty-state fade-up">
-      <div class="empty-icon">📋</div>
-      <div class="empty-title">No booking requests</div>
-      <div class="empty-desc">All clear — no pending or past bookings to review.</div>
+      <div class="empty-icon">📄</div>
+      <div class="empty-title">No booking documents</div>
+      <div class="empty-desc">Documents uploaded during vehicle booking will appear here.</div>
     </div>
     {% endif %}
   </div>
