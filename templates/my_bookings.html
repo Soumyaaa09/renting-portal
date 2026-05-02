@@ -42,7 +42,7 @@
               </span>
             </td>
             <td data-label="Total">
-              <span style="font-family:var(--font-head); color:#1a1612; font-weight:700;">₹{{ b.price }}</span>
+              <span style="font-family:var(--font-head); color:var(--ink); font-weight:700;">₹{{ b.price }}</span>
             </td>
             <td data-label="Status">
               {% if b.status == 'pending' %}
@@ -69,6 +69,8 @@
     </div>
     {% endif %}
   </div>
+
+  {% include 'footer.html' %}
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
 </body>

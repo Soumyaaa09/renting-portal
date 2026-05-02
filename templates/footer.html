@@ -1,0 +1,53 @@
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-links">
+      <div class="footer-column">
+        <h2>Important Links</h2>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/vehicles">Browse Fleet</a>
+        <a href="/my-bookings">My Bookings</a>
+        <a href="/upload-docs">Upload Documents</a>
+      </div>
+
+      <div class="footer-column">
+        <h2>Other Links</h2>
+        {% if session.get('role') == 'admin' %}
+        <a href="/admin">Admin Dashboard</a>
+        <a href="/admin/bookings">Manage Bookings</a>
+        <a href="/admin/vehicles">Manage Fleet</a>
+        <a href="/admin/add-vehicle">Add Vehicle</a>
+        {% else %}
+        <a href="/login">Sign In</a>
+        <a href="/register">Create Account</a>
+        <a href="/vehicles">Available Vehicles</a>
+        <a href="/logout">Logout</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="footer-nav-cards" aria-label="Quick navigation">
+      {% if session.get('role') == 'admin' %}
+      <a href="/admin">Dashboard</a>
+      <a href="/admin/bookings">Bookings</a>
+      <a href="/admin/vehicles">Vehicles</a>
+      <a href="/admin/add-vehicle">Add Vehicle</a>
+      <a href="/vehicles">User Fleet</a>
+      <a href="/logout">Logout</a>
+      {% else %}
+      <a href="/dashboard">Home</a>
+      <a href="/vehicles">Fleet</a>
+      <a href="/my-bookings">Bookings</a>
+      <a href="/upload-docs">Documents</a>
+      <a href="/login">Sign In</a>
+      <a href="/logout">Logout</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>DriveNow Rental Portal &copy; 2026, All Rights Reserved</p>
+    <p>Built for seamless vehicle rentals</p>
+  </div>
+
+  <a class="footer-top" href="#" aria-label="Back to top">&#8593;</a>
+</footer>

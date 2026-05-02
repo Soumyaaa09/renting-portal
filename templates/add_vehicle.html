@@ -19,7 +19,6 @@
     <div class="navbar-links" id="navbar-links">
       <a href="/admin">Dashboard</a>
       <a href="/admin/bookings">Bookings</a>
-      <a href="/admin/documents">Documents</a>
       <a href="/admin/vehicles">Fleet</a>
       <a href="/admin/add-vehicle">Add Vehicle</a>
       <a href="/logout" class="logout">Logout</a>
@@ -33,25 +32,6 @@
         <div class="section-label">Admin &rarr; Fleet</div>
         <h1 class="page-title">Add <span class="accent">Vehicle</span></h1>
         <p class="page-subtitle">Register a polished fleet listing with the details customers need before booking.</p>
-
-        <div class="fleet-preview" aria-hidden="true">
-          <div class="preview-topline">
-            <span class="preview-status"></span>
-            Fleet ready
-          </div>
-          <div class="preview-vehicle">
-            <div class="preview-icon">DR</div>
-            <div>
-              <div class="preview-name">New vehicle</div>
-              <div class="preview-meta">Type, image and hourly rate</div>
-            </div>
-          </div>
-          <div class="preview-stats">
-            <span>Fast setup</span>
-            <span>Image optional</span>
-            <span>Live after save</span>
-          </div>
-        </div>
       </section>
 
       <section class="add-vehicle-card card fade-up delay-1">
@@ -112,6 +92,8 @@
 
     </div>
   </div>
+
+  {% include 'footer.html' %}
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
   <script>
