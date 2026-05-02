@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Vehicle — DriveNow Admin</title>
+  <title>Add Vehicle - DriveNow Admin</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style3d.css') }}">
 </head>
 <body>
@@ -11,7 +11,7 @@
 
   <nav class="navbar">
     <a href="/admin" class="navbar-brand">
-      <div class="brand-icon">⚙️</div>
+      <div class="brand-icon">&#9881;</div>
       Drive<span>Now</span>
       <span style="font-size:0.6rem; color:#d97706; margin-left:6px; border:1px solid rgba(217,119,6,0.3); padding:2px 7px; border-radius:4px;">ADMIN</span>
     </a>
@@ -26,54 +26,89 @@
     </div>
   </nav>
 
-  <div class="container">
-    <div style="max-width:520px; margin:0 auto;">
+  <div class="container add-vehicle-shell">
+    <div class="add-vehicle-layout">
 
-      <div class="page-header fade-up">
-        <div class="section-label">Admin → Fleet</div>
+      <section class="add-vehicle-intro fade-up">
+        <div class="section-label">Admin &rarr; Fleet</div>
         <h1 class="page-title">Add <span class="accent">Vehicle</span></h1>
-        <p class="page-subtitle">Register a new vehicle to make it available for booking.</p>
-      </div>
+        <p class="page-subtitle">Register a polished fleet listing with the details customers need before booking.</p>
 
-      <div class="card fade-up delay-1" style="padding:36px;">
-        <form method="POST" enctype="multipart/form-data">
+        <div class="fleet-preview" aria-hidden="true">
+          <div class="preview-topline">
+            <span class="preview-status"></span>
+            Fleet ready
+          </div>
+          <div class="preview-vehicle">
+            <div class="preview-icon">DR</div>
+            <div>
+              <div class="preview-name">New vehicle</div>
+              <div class="preview-meta">Type, image and hourly rate</div>
+            </div>
+          </div>
+          <div class="preview-stats">
+            <span>Fast setup</span>
+            <span>Image optional</span>
+            <span>Live after save</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="add-vehicle-card card fade-up delay-1">
+        <div class="form-heading">
+          <div>
+            <div class="section-label">Vehicle Details</div>
+            <h2>Fleet Entry</h2>
+          </div>
+          <span class="form-chip">Admin</span>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="add-vehicle-form">
 
           <div class="form-group">
-            <label class="form-label">Vehicle Name</label>
-            <input class="form-input" type="text" name="name"
-              placeholder="e.g. Honda City, Royal Enfield…" required>
+            <label class="form-label" for="vehicle-name">Vehicle Name</label>
+            <input id="vehicle-name" class="form-input" type="text" name="name"
+              placeholder="e.g. Honda City, Royal Enfield" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="vehicle-type">Vehicle Type</label>
+              <select id="vehicle-type" class="form-input" name="type" required>
+                <option value="">Select type</option>
+                <option value="car">Car</option>
+                <option value="bike">Bike</option>
+                <option value="suv">SUV</option>
+                <option value="van">Van</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="vehicle-price">Price per Hour (&#8377;)</label>
+              <input id="vehicle-price" class="form-input" type="number" name="price"
+                placeholder="250" min="1" required>
+            </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Vehicle Type</label>
-            <select class="form-input" name="type" required>
-              <option value="">Select type…</option>
-              <option value="car">Car</option>
-              <option value="bike">Bike</option>
-              <option value="suv">SUV</option>
-              <option value="van">Van</option>
-            </select>
+            <label class="form-label" for="vehicle-image">Vehicle Image <span>(optional)</span></label>
+            <label class="file-drop" for="vehicle-image">
+              <span class="file-drop-icon">+</span>
+              <span>
+                <strong>Upload vehicle photo</strong>
+                <small>JPG, PNG or WEBP image</small>
+              </span>
+              <input id="vehicle-image" type="file" name="image_file" accept="image/*">
+            </label>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Price per Hour (₹)</label>
-            <input class="form-input" type="number" name="price"
-              placeholder="e.g. 250" min="1" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Vehicle Image <span style="color:var(--text2); font-weight:400;">(optional)</span></label>
-            <input class="form-input" type="file" name="image_file"
-              accept="image/*" style="padding:10px;">
-          </div>
-
-          <div style="margin-top:8px; display:flex; gap:12px; flex-wrap:wrap;">
-            <button type="submit" class="btn btn-primary">Add to Fleet →</button>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add to Fleet &rarr;</button>
             <a href="/admin/vehicles" class="btn">Cancel</a>
           </div>
 
         </form>
-      </div>
+      </section>
 
     </div>
   </div>

@@ -8,27 +8,23 @@
 </head>
 <body>
   <canvas id="particle-canvas"></canvas>
-
   {% include 'navbar.html' %}
 
   <!-- HERO -->
-  <section class="hero" style="min-height:90vh; overflow:hidden; position:relative;">
+  <section class="hero" style="min-height:88vh; overflow:hidden; position:relative;">
 
-    <!-- Full background car image -->
+    <!-- Background car image with dark overlay -->
     <div style="position:absolute; inset:0; z-index:0;">
-
       <img
         src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1800&q=80&auto=format&fit=crop"
         alt=""
         data-parallax="0.18"
-        style="width:100%; height:110%; object-fit:cover; object-position:center 60%; filter:brightness(0.92) saturate(0.85);"
+        style="width:100%; height:110%; object-fit:cover; object-position:center 60%; filter:brightness(0.35) saturate(0.8);"
       />
-
-      <!-- Left-to-right fade so text stays readable -->
-      <div style="position:absolute; inset:0; background:linear-gradient(105deg, rgba(247,245,242,0.96) 0%, rgba(247,245,242,0.82) 38%, rgba(247,245,242,0.30) 65%, rgba(247,245,242,0.08) 100%);"></div>
-
-      <!-- Bottom fade into page -->
-      <div style="position:absolute; bottom:0; left:0; right:0; height:160px; background:linear-gradient(to bottom, transparent, var(--bg));"></div>
+      <!-- gradient fade -->
+      <div style="position:absolute; inset:0; background:linear-gradient(105deg, rgba(8,11,20,0.97) 0%, rgba(8,11,20,0.85) 40%, rgba(8,11,20,0.4) 70%, rgba(8,11,20,0.1) 100%);"></div>
+      <!-- bottom fade -->
+      <div style="position:absolute; bottom:0; left:0; right:0; height:200px; background:linear-gradient(to bottom, transparent, #080b14);"></div>
     </div>
 
     <div class="hero-content" style="position:relative; z-index:2;">
@@ -40,7 +36,7 @@
       </h1>
 
       <p class="hero-desc fade-up delay-2">
-        Cars, bikes, SUVs and more — available near you with instant booking and real-time confirmation.
+        Cars, bikes, SUVs and more &mdash; available near you with instant booking and real-time confirmation.
       </p>
 
       <div class="hero-cta fade-up delay-3">
@@ -51,62 +47,53 @@
   </section>
 
   <!-- STATS -->
-  <div class="container" style="margin-top:-40px;">
+  <div class="container" style="margin-top:-60px;">
     <div class="grid grid-4">
-
       <div class="card stat-card fade-up delay-1">
         <span class="stat-icon">&#x1F697;</span>
         <div class="stat-value">320+</div>
         <div class="stat-label">Vehicles Available</div>
       </div>
-
       <div class="card stat-card fade-up delay-2">
         <span class="stat-icon">&#x1F3D9;</span>
         <div class="stat-value">28</div>
         <div class="stat-label">Cities Covered</div>
       </div>
-
       <div class="card stat-card fade-up delay-3">
         <span class="stat-icon">&#x2B50;</span>
         <div class="stat-value">4.8</div>
         <div class="stat-label">Average Rating</div>
       </div>
-
       <div class="card stat-card fade-up delay-4">
         <span class="stat-icon">&#x1F465;</span>
         <div class="stat-value">52K</div>
         <div class="stat-label">Happy Users</div>
       </div>
-
     </div>
 
     <div class="divider"></div>
 
     <div class="page-header fade-up">
       <div class="section-label">Quick Actions</div>
-      <div class="page-title">What would you like to do?</div>
+      <div class="page-title">What would you like to <span class="accent">do?</span></div>
     </div>
 
     <div class="grid grid-3">
-
       <a href="/vehicles" class="card reveal-left" style="text-decoration:none; padding:36px;">
         <div style="font-size:2.4rem; margin-bottom:16px;">&#x1F698;</div>
         <div class="vehicle-name" style="margin-bottom:8px;">Browse Fleet</div>
-        <div style="color:var(--text2); font-size:0.95rem; line-height:1.6;">Explore all available vehicles and book your perfect ride.</div>
+        <div style="color:var(--text2); font-size:0.95rem; line-height:1.65;">Explore all available vehicles and book your perfect ride instantly.</div>
       </a>
-
       <a href="/my-bookings" class="card reveal-flip" style="text-decoration:none; padding:36px;">
         <div style="font-size:2.4rem; margin-bottom:16px;">&#x1F4CB;</div>
         <div class="vehicle-name" style="margin-bottom:8px;">My Bookings</div>
-        <div style="color:var(--text2); font-size:0.95rem; line-height:1.6;">View and manage your upcoming and past reservations.</div>
+        <div style="color:var(--text2); font-size:0.95rem; line-height:1.65;">View and manage your upcoming and past reservations.</div>
       </a>
-
       <a href="/logout" class="card reveal-right" style="text-decoration:none; padding:36px;">
         <div style="font-size:2.4rem; margin-bottom:16px;">&#x1F513;</div>
         <div class="vehicle-name" style="margin-bottom:8px; color:var(--danger);">Sign Out</div>
-        <div style="color:var(--text2); font-size:0.95rem; line-height:1.6;">Securely sign out of your DriveNow account.</div>
+        <div style="color:var(--text2); font-size:0.95rem; line-height:1.65;">Securely sign out of your DriveNow account.</div>
       </a>
-
     </div>
   </div>
 
