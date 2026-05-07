@@ -353,7 +353,24 @@
               <label class="form-label">Upload Aadhaar Card <span style="color:#ef4444;">*</span></label>
               <input class="form-input" type="file" name="aadhaar_file" accept="image/*,.pdf" required style="padding:10px;">
             </div>
-            <button type="submit" class="btn btn-primary btn-full">Confirm Booking →</button>
+
+            <!-- Payment info box -->
+            <div style="background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2);
+                        border-radius:12px; padding:16px 18px; margin-bottom:16px;">
+              <div style="font-size:0.8rem; font-weight:700; color:#fbbf24; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.08em;">
+                💳 Booking Fee — ₹50
+              </div>
+              <div style="font-size:0.85rem; color:rgba(200,210,255,0.75); line-height:1.65;">
+                A non-refundable booking fee of <strong style="color:#fbbf24;">₹50</strong> is required to confirm your reservation.
+                This amount will be <strong style="color:#34d399;">deducted from your total</strong> at the time of pickup.
+                <br><br>
+                <span style="color:rgba(248,113,113,0.9); font-size:0.8rem;">⚠ The ₹50 booking fee is non-refundable in case of cancellation.</span>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="font-size:0.9rem; padding:14px;">
+              Proceed to Pay ₹50 →
+            </button>
           </form>
         </div>
 
@@ -367,8 +384,6 @@
   </div>
 
   <div id="vehicleData" data-price="{{ vehicle.price }}"></div>
-
-  {% include 'footer.html' %}
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
   <script>
@@ -461,5 +476,229 @@
     document.getElementById('start_time').addEventListener('change', calcPrice);
     document.getElementById('end_time').addEventListener('change', calcPrice);
   </script>
+
+  {% if show_payment %}
+  <!-- ── UPI PAYMENT MODAL ─────────────────────────────────── -->
+  <div id="payment-overlay" style="
+    position:fixed; inset:0; z-index:20000;
+    background:rgba(8,11,20,0.88); backdrop-filter:blur(16px);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; overflow-y:auto;">
+
+    <div style="
+      background:rgba(20,24,40,0.98); border:1px solid rgba(255,255,255,0.12);
+      border-radius:28px; padding:40px 36px; max-width:480px; width:100%;
+      box-shadow:0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+      position:relative; animation:boxIn 0.55s cubic-bezier(.23,1,.32,1) both; margin:auto;">
+
+      <!-- Top accent line -->
+      <div style="position:absolute; top:0; left:10%; right:10%; height:2px;
+        background:linear-gradient(90deg,transparent,#6c63ff,#a78bfa,#38bdf8,transparent);
+        border-radius:0 0 2px 2px;"></div>
+
+      <!-- Header -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="font-size:2.4rem; margin-bottom:10px;">📱</div>
+        <div style="font-family:var(--font-head); font-size:1.45rem; font-weight:800;
+          color:#f0f4ff; letter-spacing:-0.02em; margin-bottom:4px;">Pay &#8377;50 via UPI</div>
+        <div style="font-size:0.84rem; color:rgba(180,190,255,0.6);">
+          GPay, PhonePe, Paytm, BHIM &amp; all UPI apps accepted
+        </div>
+      </div>
+
+      <!-- Booking summary -->
+      <div style="background:rgba(108,99,255,0.08); border:1px solid rgba(108,99,255,0.2);
+                  border-radius:14px; padding:16px 18px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; padding:5px 0;
+                    border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.86rem;">
+          <span style="color:rgba(180,190,255,0.6);">Vehicle</span>
+          <span style="color:#f0f4ff; font-weight:600;">{{ vehicle.name }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:5px 0;
+                    border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.86rem;">
+          <span style="color:rgba(180,190,255,0.6);">Total Booking Amount</span>
+          <span style="color:#a78bfa; font-weight:700;">&#8377;{{ total_price }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:5px 0;
+                    border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.86rem;">
+          <span style="color:rgba(180,190,255,0.6);">Booking Fee (pay now)</span>
+          <span style="color:#fbbf24; font-weight:700;">&#8377;50</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:7px 0 0; font-size:0.9rem;">
+          <span style="color:rgba(180,190,255,0.6);">Balance at Pickup</span>
+          <span style="color:#34d399; font-weight:700;">&#8377;{{ total_price - 50 }}</span>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+
+        <!-- Step 1: Pay via UPI -->
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+                    border-radius:14px; padding:16px 18px;">
+          <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase;
+                      letter-spacing:0.1em; color:#a78bfa; margin-bottom:12px;">
+            Step 1 &mdash; Pay &#8377;50
+          </div>
+
+          <!-- QR Code -->
+          <div style="text-align:center; margin-bottom:14px;">
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=upi://pay?pa=soumya.77@superyes%26pn=DriveNow%26am=50%26cu=INR%26tn=BookingFee"
+              alt="UPI QR"
+              style="border-radius:12px; border:3px solid rgba(108,99,255,0.35);
+                     box-shadow:0 0 24px rgba(108,99,255,0.2);"
+              width="170" height="170"
+            />
+            <div style="font-size:0.75rem; color:rgba(180,190,255,0.45); margin-top:8px;">
+              Scan with any UPI app
+            </div>
+          </div>
+
+          <!-- UPI ID copy -->
+          <div style="text-align:center; font-size:0.78rem; color:rgba(180,190,255,0.5); margin-bottom:8px;">
+            or pay directly to UPI ID
+          </div>
+          <div id="upi-id-box" style="
+            background:rgba(108,99,255,0.1); border:1px solid rgba(108,99,255,0.3);
+            border-radius:10px; padding:10px 14px; text-align:center;
+            font-family:monospace; font-size:1rem; color:#a78bfa; font-weight:700;
+            letter-spacing:0.03em; cursor:pointer; user-select:all; transition:all 0.2s;"
+            onclick="copyUPI()"
+            title="Click to copy">
+            soumya.77@superyes
+          </div>
+          <div style="text-align:center; font-size:0.72rem; color:rgba(180,190,255,0.4); margin-top:5px;">
+            Click to copy &bull; Amount: &#8377;50
+          </div>
+
+          <!-- UPI App buttons -->
+          <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; justify-content:center;">
+            <a href="upi://pay?pa=soumya.77@superyes&pn=DriveNow&am=50&cu=INR&tn=BookingFee"
+               class="btn" style="font-size:0.75rem; padding:8px 14px; flex:1; min-width:80px; text-align:center;"
+               onclick="markPaid()">
+              &#128241; Open UPI App
+            </a>
+            <a href="gpay://upi/pay?pa=soumya.77@superyes&pn=DriveNow&am=50&cu=INR&tn=BookingFee"
+               class="btn" style="font-size:0.75rem; padding:8px 14px; flex:1; min-width:80px; text-align:center;"
+               onclick="markPaid()">
+              G Pay
+            </a>
+            <a href="phonepe://pay?pa=soumya.77@superyes&pn=DriveNow&am=50&cu=INR&tn=BookingFee"
+               class="btn" style="font-size:0.75rem; padding:8px 14px; flex:1; min-width:80px; text-align:center;"
+               onclick="markPaid()">
+              PhonePe
+            </a>
+          </div>
+        </div>
+
+        <!-- Step 2: Upload screenshot -->
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+                    border-radius:14px; padding:16px 18px;">
+          <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase;
+                      letter-spacing:0.1em; color:#a78bfa; margin-bottom:10px;">
+            Step 2 &mdash; Upload Payment Screenshot
+          </div>
+          <label id="upload-label" style="
+            display:flex; flex-direction:column; align-items:center; gap:8px;
+            border:2px dashed rgba(108,99,255,0.25); border-radius:10px; padding:18px;
+            cursor:pointer; transition:all 0.25s; text-align:center;">
+            <span style="font-size:1.6rem;" id="upload-icon">&#128247;</span>
+            <span style="font-size:0.82rem; color:rgba(180,190,255,0.6);" id="upload-text">
+              Click to upload payment screenshot
+            </span>
+            <input type="file" id="screenshot-input" accept="image/*"
+              style="display:none" onchange="handleScreenshot(this)">
+          </label>
+        </div>
+      </div>
+
+      <!-- Non-refundable warning -->
+      <div style="background:rgba(248,113,113,0.07); border:1px solid rgba(248,113,113,0.18);
+                  border-radius:10px; padding:10px 14px; margin-bottom:20px;
+                  font-size:0.78rem; color:rgba(248,113,113,0.85); line-height:1.6;">
+        &#9888; The &#8377;50 booking fee is <strong>non-refundable</strong>.
+        Your booking will be confirmed after admin verifies your screenshot.
+      </div>
+
+      <!-- Submit form -->
+      <form method="POST" action="/payment-success" enctype="multipart/form-data" id="upi-form">
+        <input type="hidden" name="total_price" value="{{ total_price }}">
+        <input type="file" name="payment_screenshot" id="hidden-screenshot" accept="image/*" style="display:none">
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full"
+          style="font-size:0.92rem; padding:14px; margin-bottom:10px; opacity:0.4; cursor:not-allowed;"
+          disabled onclick="return validateAndSubmit()">
+          &#10003; I've Paid — Submit Booking
+        </button>
+      </form>
+
+      <button onclick="document.getElementById('payment-overlay').remove()"
+        class="btn btn-full" style="font-size:0.82rem;">
+        &larr; Go Back
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let screenshotReady = false;
+
+    function copyUPI() {
+      navigator.clipboard.writeText('soumya.77@superyes').then(() => {
+        const box = document.getElementById('upi-id-box');
+        const orig = box.textContent;
+        box.textContent = '&#10003; Copied!';
+        box.style.borderColor = 'rgba(52,211,153,0.5)';
+        box.style.color = '#34d399';
+        setTimeout(() => { box.textContent = orig; box.style.borderColor = ''; box.style.color = ''; }, 2000);
+      });
+    }
+
+    function markPaid() {
+      // After clicking UPI button, remind user to upload screenshot
+      setTimeout(() => {
+        document.getElementById('upload-label').style.borderColor = 'rgba(251,191,36,0.5)';
+        document.getElementById('upload-label').style.background = 'rgba(251,191,36,0.04)';
+        document.getElementById('upload-text').textContent = 'Please upload your payment screenshot now';
+        document.getElementById('upload-text').style.color = '#fbbf24';
+      }, 2000);
+    }
+
+    function handleScreenshot(input) {
+      if (input.files && input.files[0]) {
+        screenshotReady = true;
+        document.getElementById('upload-icon').textContent = '\u2705';
+        document.getElementById('upload-text').textContent = '\u2713 ' + input.files[0].name;
+        document.getElementById('upload-label').style.borderColor = 'rgba(52,211,153,0.5)';
+        document.getElementById('upload-label').style.background  = 'rgba(52,211,153,0.05)';
+        document.getElementById('upload-text').style.color = '#34d399';
+
+        // Transfer file to form input
+        const dt = new DataTransfer();
+        dt.items.add(input.files[0]);
+        document.getElementById('hidden-screenshot').files = dt.files;
+
+        // Enable submit button
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor  = 'pointer';
+      }
+    }
+
+    function validateAndSubmit() {
+      if (!screenshotReady) {
+        alert('Please upload your payment screenshot first.');
+        return false;
+      }
+      return true;
+    }
+
+    // Wire up file input click
+    document.getElementById('upload-label').addEventListener('click', () => {
+      document.getElementById('screenshot-input').click();
+    });
+  </script>
+  {% endif %}
+
 </body>
 </html>

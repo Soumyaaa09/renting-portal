@@ -41,6 +41,8 @@
             <th>Date</th>
             <th>Time Slot</th>
             <th>Total</th>
+            <th>Payment</th>
+            <th>Documents</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -57,7 +59,46 @@
               </span>
             </td>
             <td data-label="Total">
-              <span style="font-family:var(--font-head); font-weight:700;">₹{{ b.price }}</span>
+              <span style="font-family:var(--font-head); font-weight:700; color:#f0f4ff;">₹{{ b.price }}</span>
+            </td>
+            <td data-label="Payment">
+              {% if b.payment_screenshot %}
+              <a href="{{ b.payment_screenshot }}" target="_blank"
+                style="display:inline-flex; align-items:center; gap:5px;
+                       background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.25);
+                       color:#34d399; padding:4px 10px; border-radius:8px;
+                       font-size:0.72rem; font-weight:700; text-decoration:none;">
+                📸 View
+              </a>
+              {% else %}
+              <span style="color:rgba(180,190,255,0.35); font-size:0.78rem;">—</span>
+              {% endif %}
+            </td>
+            <td data-label="Documents">
+              <div style="display:flex; flex-direction:column; gap:5px;">
+                {% if b.dl_url %}
+                <a href="{{ b.dl_url }}" target="_blank"
+                  style="display:inline-flex; align-items:center; gap:4px;
+                         background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25);
+                         color:#38bdf8; padding:4px 10px; border-radius:8px;
+                         font-size:0.72rem; font-weight:700; text-decoration:none;">
+                  🪪 DL
+                </a>
+                {% else %}
+                <span style="color:rgba(180,190,255,0.35); font-size:0.72rem;">No DL</span>
+                {% endif %}
+                {% if b.aadhaar_url %}
+                <a href="{{ b.aadhaar_url }}" target="_blank"
+                  style="display:inline-flex; align-items:center; gap:4px;
+                         background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.25);
+                         color:#a78bfa; padding:4px 10px; border-radius:8px;
+                         font-size:0.72rem; font-weight:700; text-decoration:none;">
+                  🪪 Aadhaar
+                </a>
+                {% else %}
+                <span style="color:rgba(180,190,255,0.35); font-size:0.72rem;">No Aadhaar</span>
+                {% endif %}
+              </div>
             </td>
             <td data-label="Status">
               {% if b.status == 'pending' %}
@@ -92,8 +133,6 @@
     </div>
     {% endif %}
   </div>
-
-  {% include 'footer.html' %}
 
   <script src="{{ url_for('static', filename='main3d.js') }}"></script>
   <script>

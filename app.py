@@ -436,8 +436,6 @@ def book(vehicle_id):
             return render_template('book.html', vehicle=vehicle, message="Please upload your Aadhaar Card.", show_form=True)
 
         uid = str(session['user_id'])
-        dl_url = None
-        aadhaar_url = None
         try:
             dl_ext  = dl_file.filename.rsplit('.', 1)[-1].lower()
             dl_path = f"{uid}/dl_{uuid.uuid4().hex}.{dl_ext}"
@@ -485,31 +483,65 @@ def book(vehicle_id):
         hours = (end - start).seconds / 3600
         total_price = int(hours * vehicle['price'])
 
-        booking_data = {
-            "user_id": session['user_id'],
-            "user_name": session['user_name'],
-            "vehicle_id": vehicle_id,
+        # Store booking in session for after payment
+        session['pending_booking'] = {
+            "user_id":      str(session['user_id']),
+            "user_name":    session['user_name'],
+            "vehicle_id":   vehicle_id,
             "vehicle_name": vehicle['name'],
-            "price": total_price,
+            "price":        total_price,
             "booking_date": booking_date,
-            "start_time": start_time,
-            "end_time": end_time,
-            "status": "pending",
-            "dl_url": dl_url,
-            "aadhaar_url": aadhaar_url
+            "start_time":   start_time,
+            "end_time":     end_time,
         }
 
-        try:
-            supabase.table("bookings").insert(booking_data).execute()
-        except Exception:
-            # Older databases may not have booking-level document columns yet.
-            booking_data.pop("dl_url", None)
-            booking_data.pop("aadhaar_url", None)
-            supabase.table("bookings").insert(booking_data).execute()
-
-        return redirect('/my-bookings')
+        return render_template('book.html', vehicle=vehicle,
+                               show_payment=True,
+                               total_price=total_price)
 
     return render_template('book.html', vehicle=vehicle)
+
+
+# ---------------- UPI PAYMENT SUCCESS ----------------
+@app.route('/payment-success', methods=['POST'])
+def payment_success():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    booking = session.pop('pending_booking', None)
+    if not booking:
+        return redirect('/vehicles')
+
+    # Upload screenshot to Supabase storage
+    screenshot_url = None
+    screenshot = request.files.get('payment_screenshot')
+    if screenshot and screenshot.filename:
+        try:
+            ext  = screenshot.filename.rsplit('.', 1)[-1].lower()
+            path = f"payments/{str(session['user_id'])[:8]}_{uuid.uuid4().hex[:8]}.{ext}"
+            supabase.storage.from_("documents").upload(
+                path, screenshot.read(),
+                {"content-type": screenshot.content_type, "upsert": "true"}
+            )
+            screenshot_url = supabase.storage.from_("documents").get_public_url(path)
+        except Exception:
+            screenshot_url = None
+
+    supabase.table("bookings").insert({
+        "user_id":            booking["user_id"],
+        "user_name":          booking["user_name"],
+        "vehicle_id":         booking["vehicle_id"],
+        "vehicle_name":       booking["vehicle_name"],
+        "price":              booking["price"],
+        "booking_date":       booking["booking_date"],
+        "start_time":         booking["start_time"],
+        "end_time":           booking["end_time"],
+        "status":             "pending",
+        "payment_screenshot": screenshot_url,
+        "booking_fee_paid":   True
+    }).execute()
+
+    return redirect('/my-bookings?paid=1')
 
 
 # ---------------- MY BOOKINGS ----------------
@@ -517,12 +549,22 @@ def book(vehicle_id):
 def my_bookings():
     if 'user_id' not in session:
         return redirect('/login')
+    if session.get('role') == 'admin':
+        return redirect('/admin/bookings')
 
+    user_id = session['user_id']
     bookings = supabase.table("bookings") \
         .select("*") \
-        .eq("user_id", session['user_id']) \
+        .eq("user_id", str(user_id)) \
         .order("id", desc=True) \
         .execute().data
+
+    if not bookings and not isinstance(user_id, str):
+        bookings = supabase.table("bookings") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .order("id", desc=True) \
+            .execute().data
 
     return render_template('my_bookings.html', bookings=bookings)
 
@@ -548,31 +590,41 @@ def admin():
                            maintenance=is_maintenance())
 
 
-# ---------------- ADMIN DOCUMENTS ----------------
-@app.route('/admin/documents')
-def admin_documents():
-    if session.get('role') != 'admin':
-        return redirect('/login')
-
-    bookings = supabase.table("bookings").select("*").order("id", desc=True).execute().data
-    return render_template('admin_documents.html', bookings=bookings)
-
-
 # ---------------- ADMIN BOOKINGS ----------------
 @app.route('/admin/bookings')
 def admin_bookings():
     if session.get('role') != 'admin':
         return redirect('/login')
 
-    bookings = supabase.table("bookings").select("*").execute().data
+    bookings = supabase.table("bookings").select("*").order("id", desc=True).execute().data
+
+    # Fetch dl_url and aadhaar_url for each booking's user
+    user_ids = list(set(b['user_id'] for b in bookings if b.get('user_id')))
+    users_map = {}
+    if user_ids:
+        users = supabase.table("users").select("id,dl_url,aadhaar_url").in_("id", user_ids).execute().data
+        users_map = {str(u['id']): u for u in users}
+
+    # Attach docs to each booking
+    for b in bookings:
+        user = users_map.get(str(b.get('user_id')), {})
+        b['dl_url']      = user.get('dl_url')
+        b['aadhaar_url'] = user.get('aadhaar_url')
+
     return render_template('admin_bookings.html', bookings=bookings)
 
 
 # ---------------- APPROVE ----------------
 @app.route('/approve/<booking_id>')
 def approve(booking_id):
+    if session.get('role') != 'admin':
+        return redirect('/login')
 
-    booking = supabase.table("bookings").select("*").eq("id", booking_id).execute().data[0]
+    booking_rows = supabase.table("bookings").select("*").eq("id", booking_id).execute().data
+    if not booking_rows:
+        return redirect('/admin/bookings')
+
+    booking = booking_rows[0]
 
     if booking['status'] != 'pending':
         return redirect('/admin/bookings')
@@ -588,8 +640,14 @@ def approve(booking_id):
 # ---------------- REJECT ----------------
 @app.route('/reject/<booking_id>')
 def reject(booking_id):
+    if session.get('role') != 'admin':
+        return redirect('/login')
 
-    booking = supabase.table("bookings").select("*").eq("id", booking_id).execute().data[0]
+    booking_rows = supabase.table("bookings").select("*").eq("id", booking_id).execute().data
+    if not booking_rows:
+        return redirect('/admin/bookings')
+
+    booking = booking_rows[0]
 
     if booking['status'] != 'pending':
         return redirect('/admin/bookings')
@@ -608,7 +666,7 @@ def rate_booking(booking_id):
     if 'user_id' not in session:
         return redirect('/login')
 
-    booking = supabase.table("bookings").select("*").eq("id", booking_id).eq("user_id", session['user_id']).execute().data
+    booking = supabase.table("bookings").select("*").eq("id", booking_id).eq("user_id", str(session['user_id'])).execute().data
     if not booking:
         return redirect('/my-bookings')
     booking = booking[0]
@@ -627,7 +685,7 @@ def rate_booking(booking_id):
 
         supabase.table("reviews").insert({
             "booking_id":   booking_id,
-            "user_id":      session['user_id'],
+            "user_id":      str(session['user_id']),
             "user_name":    session['user_name'],
             "vehicle_id":   booking['vehicle_id'],
             "vehicle_name": booking['vehicle_name'],
