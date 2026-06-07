@@ -113,10 +113,18 @@ def login():
     if request.method == 'POST':
         email  = request.form['email'].strip().lower()
         method = request.form.get('method', 'otp')
+        try:
+            user = supabase.table("users").select("*").eq("email", email).execute().data
+        except Exception as e:
+            print(f"Login error: {e}")
+            return render_template(
+                'login.html',
+                message="Login is temporarily unavailable. Please check the Supabase configuration and try again.",
+                method=method
+            )
 
-        user = supabase.table("users").select("*").eq("email", email).execute().data
         if not user:
-            return render_template('login.html', message="No account found with this email.")
+            return render_template('login.html', message="No account found with this email.", method=method)
         user = user[0]
 
         # ── PASSWORD login ──────────────────────────────────
@@ -129,7 +137,11 @@ def login():
                 valid = (password == stored)
 
             if not valid:
-                return render_template('login.html', message="Incorrect password. Try OTP login instead.")
+                return render_template(
+                    'login.html',
+                    message="Incorrect password. Try OTP login instead.",
+                    method='password'
+                )
 
             session['user_id']   = user['id']
             session['role']      = user['role']
@@ -145,11 +157,15 @@ def login():
 
         sent = send_otp_email(email, otp)
         if not sent:
-            return render_template('login.html', message="Failed to send OTP email. Please use password login.")
+            return render_template(
+                'login.html',
+                message="Failed to send OTP email. Please use password login.",
+                method='otp'
+            )
 
         return redirect('/verify-otp')
 
-    return render_template('login.html')
+    return render_template('login.html', method='otp')
 
 
 # ---------------- LOGIN (step 2 — verify OTP) ----------------
@@ -173,7 +189,24 @@ def verify_otp():
         session.pop('otp', None)
         session.pop('otp_expires', None)
 
-        user = supabase.table("users").select("*").eq("email", email).execute().data[0]
+        try:
+            user_rows = supabase.table("users").select("*").eq("email", email).execute().data
+        except Exception as e:
+            print(f"Verify OTP error: {e}")
+            return render_template(
+                'verify_otp.html',
+                message="Verification is temporarily unavailable. Please try again later.",
+                email=email
+            )
+
+        if not user_rows:
+            return render_template(
+                'verify_otp.html',
+                message="No account found for this email. Please sign in again.",
+                email=email
+            )
+
+        user = user_rows[0]
         session['user_id']   = user['id']
         session['role']      = user['role']
         session['user_name'] = user['name']
