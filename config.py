@@ -1,2 +1,10 @@
-SUPABASE_URL = "https://frzzuilpviosypqnboaz.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyenp1aWxwdmlvc3lwcW5ib2F6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY5MTUyMSwiZXhwIjoyMDkyMjY3NTIxfQ.gzxXIXZE00-Euyp2Rcz6BGbc8SRrM0PecyPij-F6zF0"
+import os
+
+SUPABASE_URL = os.environ.get(
+    "SUPABASE_URL",
+    "https://frzzuilpviosypqnboaz.supabase.co",
+)
+SUPABASE_KEY = os.environ.get(
+    "SUPABASE_KEY",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyenp1aWxwdmlvc3lwcW5ib2F6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjY5MTUyMSwiZXhwIjoyMDkyMjY3NTIxfQ.gzxXIXZE00-Euyp2Rcz6BGbc8SRrM0PecyPij-F6zF0",
+)

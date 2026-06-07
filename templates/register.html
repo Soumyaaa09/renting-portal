@@ -18,6 +18,10 @@
         <div class="auth-subtitle">Join DriveNow — Rent any vehicle, anytime</div>
       </div>
 
+      {% if message %}
+      <div class="form-error">âš  {{ message }}</div>
+      {% endif %}
+
       <form method="POST">
         <div class="form-group">
           <label class="form-label">Full Name</label>

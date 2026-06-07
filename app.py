@@ -68,21 +68,40 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '')
+
+        if not all([name, email, phone, password]):
+            return render_template('register.html', message="Please fill in all fields.")
 
         hashed_password = bcrypt.hashpw(
-            request.form['password'].encode('utf-8'),
+            password.encode('utf-8'),
             bcrypt.gensalt()
         )
 
         data = {
-            "name": request.form['name'],
-            "email": request.form['email'],
-            "phone": request.form['phone'],
+            "name": name,
+            "email": email,
+            "phone": phone,
             "password": hashed_password.decode('utf-8'),
             "role": "customer"
         }
 
-        supabase.table("users").insert(data).execute()
+        try:
+            existing_user = supabase.table("users").select("id").eq("email", email).limit(1).execute().data
+            if existing_user:
+                return render_template('register.html', message="An account with this email already exists.")
+
+            supabase.table("users").insert(data).execute()
+        except Exception as e:
+            print(f"Register error: {e}")
+            return render_template(
+                'register.html',
+                message="Registration is temporarily unavailable. Please check the Supabase configuration and try again."
+            )
+
         return redirect('/login')
 
     return render_template('register.html')
