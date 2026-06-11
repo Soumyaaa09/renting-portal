@@ -18,6 +18,22 @@ app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 MAIL_EMAIL    = os.environ.get("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.environ.get("MAIL_APP_PASSWORD", "")
 
+
+def establish_user_session(user):
+    user_id = user.get('id')
+    role = user.get('role')
+    name = user.get('name')
+
+    if user_id is None or not role or not name:
+        raise ValueError("User record is missing required fields.")
+
+    session['user_id'] = user_id
+    session['role'] = role
+    session['user_name'] = name
+    session.permanent = True
+
+    return '/admin' if role == 'admin' else '/dashboard'
+
 def send_otp_email(to_email, otp):
     try:
         msg = MIMEMultipart("alternative")
@@ -111,8 +127,11 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email  = request.form['email'].strip().lower()
+        email  = request.form.get('email', '').strip().lower()
         method = request.form.get('method', 'otp')
+        if not email:
+            return render_template('login.html', message="Please enter your email address.", method=method)
+
         try:
             user = supabase.table("users").select("*").eq("email", email).execute().data
         except Exception as e:
@@ -131,10 +150,14 @@ def login():
         if method == 'password':
             password = request.form.get('password', '')
             stored   = user.get('password', '')
-            if stored and stored.startswith('$2b$'):
-                valid = bcrypt.checkpw(password.encode('utf-8'), stored.encode('utf-8'))
-            else:
-                valid = (password == stored)
+            try:
+                if stored and stored.startswith('$2b$'):
+                    valid = bcrypt.checkpw(password.encode('utf-8'), stored.encode('utf-8'))
+                else:
+                    valid = (password == stored)
+            except ValueError as e:
+                print(f"Password verification error for {email}: {e}")
+                valid = False
 
             if not valid:
                 return render_template(
@@ -143,11 +166,15 @@ def login():
                     method='password'
                 )
 
-            session['user_id']   = user['id']
-            session['role']      = user['role']
-            session['user_name'] = user['name']
-            session.permanent    = True
-            return redirect('/admin' if user['role'] == 'admin' else '/dashboard')
+            try:
+                return redirect(establish_user_session(user))
+            except ValueError as e:
+                print(f"Login session error for {email}: {e}")
+                return render_template(
+                    'login.html',
+                    message="Your account is missing required profile fields. Please contact support.",
+                    method='password'
+                )
 
         # ── OTP login ───────────────────────────────────────
         otp = str(random.randint(100000, 999999))
@@ -175,7 +202,9 @@ def verify_otp():
         return redirect('/login')
 
     if request.method == 'POST':
-        entered = request.form['otp'].strip()
+        entered = request.form.get('otp', '').strip()
+        if not entered:
+            return render_template('verify_otp.html', message="Please enter the OTP code.", email=session.get('otp_email', ''))
 
         if datetime.now().timestamp() > session.get('otp_expires', 0):
             session.pop('otp', None)
@@ -207,14 +236,15 @@ def verify_otp():
             )
 
         user = user_rows[0]
-        session['user_id']   = user['id']
-        session['role']      = user['role']
-        session['user_name'] = user['name']
-
-        if user['role'] == 'admin':
-            return redirect('/admin')
-        else:
-            return redirect('/dashboard')
+        try:
+            return redirect(establish_user_session(user))
+        except ValueError as e:
+            print(f"Verify OTP session error for {email}: {e}")
+            return render_template(
+                'verify_otp.html',
+                message="Your account is missing required profile fields. Please contact support.",
+                email=email
+            )
 
     return render_template('verify_otp.html', email=session.get('otp_email', ''))
 
