@@ -37,52 +37,6 @@ def mail_config_ready():
     smtp_pass = os.environ.get("MAIL_APP_PASSWORD", "").replace(" ", "").strip()
     return bool(smtp_user and smtp_pass and os.path.exists(NODE_MAIL_SCRIPT))
 
-def send_otp_email(to_email, otp):
-    return send_otp_email_with_nodemailer(to_email, otp)
-
-    if not mail_config_ready():
-        print("Email error: MAIL_USERNAME or MAIL_APP_PASSWORD is not configured.")
-        return False
-
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = "Your DriveNow Login OTP"
-        msg["From"]    = MAIL_EMAIL
-        msg["To"]      = to_email
-
-        html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
-                    background:#f7f5f2;color:#1a1612;border-radius:16px;padding:40px;
-                    border:1px solid rgba(30,20,10,0.1);">
-          <div style="font-size:1.6rem;font-weight:800;color:#c8522a;margin-bottom:8px;">
-            DriveNow 🚗
-          </div>
-          <p style="color:#6b6058;margin-bottom:28px;">Your one-time login code is:</p>
-          <div style="font-size:3rem;font-weight:900;letter-spacing:14px;
-                      color:#c8522a;text-align:center;padding:20px;
-                      background:rgba(200,82,42,0.06);border-radius:12px;
-                      border:1px solid rgba(200,82,42,0.15);margin-bottom:24px;">
-            {otp}
-          </div>
-          <p style="color:#6b6058;font-size:0.85rem;">
-            This code expires in <strong style="color:#1a1612;">10 minutes</strong>.
-            Do not share it with anyone.
-          </p>
-        </div>
-        """
-        msg.attach(MIMEText(html, "html"))
-
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(MAIL_EMAIL, MAIL_PASSWORD)
-            server.sendmail(MAIL_EMAIL, to_email, msg.as_string())
-        return True
-    except Exception as e:
-        print(f"Email error: {e}")
-        return False
-
-
 def send_otp_email_with_nodemailer(to_email, otp):
     if not mail_config_ready():
         print("Email error: Nodemailer config or helper script is missing.")
