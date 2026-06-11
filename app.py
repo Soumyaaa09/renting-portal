@@ -1,7 +1,5 @@
 import random
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import subprocess
 from flask import Flask, render_template, request, redirect, session
 from supabase_client import supabase
 import bcrypt
@@ -15,8 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
-MAIL_EMAIL    = os.environ.get("MAIL_USERNAME", "")
-MAIL_PASSWORD = os.environ.get("MAIL_APP_PASSWORD", "").replace(" ", "")
+NODE_MAIL_SCRIPT = os.path.join(os.path.dirname(__file__), "send_otp_email.js")
 
 
 def establish_user_session(user):
@@ -36,9 +33,13 @@ def establish_user_session(user):
 
 
 def mail_config_ready():
-    return bool(MAIL_EMAIL and MAIL_PASSWORD)
+    smtp_user = os.environ.get("MAIL_USERNAME", "").strip()
+    smtp_pass = os.environ.get("MAIL_APP_PASSWORD", "").replace(" ", "").strip()
+    return bool(smtp_user and smtp_pass and os.path.exists(NODE_MAIL_SCRIPT))
 
 def send_otp_email(to_email, otp):
+    return send_otp_email_with_nodemailer(to_email, otp)
+
     if not mail_config_ready():
         print("Email error: MAIL_USERNAME or MAIL_APP_PASSWORD is not configured.")
         return False
@@ -76,6 +77,30 @@ def send_otp_email(to_email, otp):
             server.starttls()
             server.login(MAIL_EMAIL, MAIL_PASSWORD)
             server.sendmail(MAIL_EMAIL, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Email error: {e}")
+        return False
+
+
+def send_otp_email_with_nodemailer(to_email, otp):
+    if not mail_config_ready():
+        print("Email error: Nodemailer config or helper script is missing.")
+        return False
+
+    try:
+        result = subprocess.run(
+            ["node", NODE_MAIL_SCRIPT, to_email, otp],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+            cwd=os.path.dirname(__file__),
+        )
+        if result.returncode != 0:
+            error_output = result.stderr.strip() or result.stdout.strip() or "unknown error"
+            print(f"Email error: {error_output}")
+            return False
         return True
     except Exception as e:
         print(f"Email error: {e}")
@@ -190,7 +215,7 @@ def login():
         session['otp_email']   = email
         session['otp_expires'] = (datetime.now().timestamp() + 600)
 
-        sent = send_otp_email(email, otp)
+        sent = send_otp_email_with_nodemailer(email, otp)
         if not sent:
             return render_template(
                 'login.html',
@@ -268,7 +293,7 @@ def resend_otp():
     session['otp']         = otp
     session['otp_expires'] = (datetime.now().timestamp() + 600)
 
-    send_otp_email(email, otp)
+    send_otp_email_with_nodemailer(email, otp)
     return redirect('/verify-otp')
 
 
