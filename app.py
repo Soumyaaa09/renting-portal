@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
 MAIL_EMAIL    = os.environ.get("MAIL_USERNAME", "")
-MAIL_PASSWORD = os.environ.get("MAIL_APP_PASSWORD", "")
+MAIL_PASSWORD = os.environ.get("MAIL_APP_PASSWORD", "").replace(" ", "")
 
 
 def establish_user_session(user):
@@ -34,7 +34,15 @@ def establish_user_session(user):
 
     return '/admin' if role == 'admin' else '/dashboard'
 
+
+def mail_config_ready():
+    return bool(MAIL_EMAIL and MAIL_PASSWORD)
+
 def send_otp_email(to_email, otp):
+    if not mail_config_ready():
+        print("Email error: MAIL_USERNAME or MAIL_APP_PASSWORD is not configured.")
+        return False
+
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = "Your DriveNow Login OTP"
@@ -63,7 +71,7 @@ def send_otp_email(to_email, otp):
         """
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
             server.ehlo()
             server.starttls()
             server.login(MAIL_EMAIL, MAIL_PASSWORD)
@@ -186,7 +194,7 @@ def login():
         if not sent:
             return render_template(
                 'login.html',
-                message="Failed to send OTP email. Please use password login.",
+                message="Failed to send OTP email. Check mail settings on the server or use password login.",
                 method='otp'
             )
 
