@@ -35,11 +35,20 @@ def establish_user_session(user):
 def mail_config_ready():
     smtp_user = os.environ.get("MAIL_USERNAME", "").strip()
     smtp_pass = os.environ.get("MAIL_APP_PASSWORD", "").replace(" ", "").strip()
-    return bool(smtp_user and smtp_pass and os.path.exists(NODE_MAIL_SCRIPT))
+    script_exists = os.path.exists(NODE_MAIL_SCRIPT)
+    
+    if not smtp_user:
+        print("Email config: MAIL_USERNAME is missing")
+    if not smtp_pass:
+        print("Email config: MAIL_APP_PASSWORD is missing")
+    if not script_exists:
+        print(f"Email config: NODE_MAIL_SCRIPT not found at {NODE_MAIL_SCRIPT}")
+    
+    return bool(smtp_user and smtp_pass and script_exists)
 
 def send_otp_email_with_nodemailer(to_email, otp):
     if not mail_config_ready():
-        print("Email error: Nodemailer config or helper script is missing.")
+        print("Email error: Mail configuration is incomplete or helper script is missing.")
         return False
 
     try:
@@ -55,9 +64,12 @@ def send_otp_email_with_nodemailer(to_email, otp):
             error_output = result.stderr.strip() or result.stdout.strip() or "unknown error"
             print(f"Email error: {error_output}")
             return False
+        print(f"OTP email sent successfully to {to_email}")
         return True
     except Exception as e:
         print(f"Email error: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
