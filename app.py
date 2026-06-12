@@ -14,9 +14,14 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
+try:
+    mail_port = int(os.environ.get("MAIL_PORT", 587))
+except (ValueError, TypeError):
+    mail_port = 587
+
 app.config.update(
     MAIL_SERVER=os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
-    MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+    MAIL_PORT=mail_port,
     MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS", "True").lower() in ("true", "1", "yes"),
     MAIL_USE_SSL=os.environ.get("MAIL_USE_SSL", "False").lower() in ("true", "1", "yes"),
     MAIL_USERNAME=os.environ.get("MAIL_USERNAME", "").strip(),
@@ -24,7 +29,11 @@ app.config.update(
     MAIL_DEFAULT_SENDER=os.environ.get("MAIL_FROM") or os.environ.get("MAIL_USERNAME", "").strip(),
 )
 
-mail = Mail(app)
+try:
+    mail = Mail(app)
+except Exception as e:
+    print(f"Warning: Flask-Mail initialization failed: {e}")
+    mail = None
 
 print("App startup: SUPABASE_URL set:", bool(os.environ.get("SUPABASE_URL")))
 print("App startup: SUPABASE_KEY set:", bool(os.environ.get("SUPABASE_KEY")))
@@ -61,6 +70,10 @@ def mail_config_ready():
 
 
 def send_otp_email_with_nodemailer(to_email, otp):
+    if mail is None:
+        print("Email error: Flask-Mail is not initialized.")
+        return False
+    
     if not mail_config_ready():
         print("Email error: Mail configuration is incomplete.")
         return False
