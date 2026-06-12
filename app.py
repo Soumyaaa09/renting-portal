@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import base64
 import uuid
 import os
+import traceback
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,6 +25,11 @@ app.config.update(
 )
 
 mail = Mail(app)
+
+print("App startup: SUPABASE_URL set:", bool(os.environ.get("SUPABASE_URL")))
+print("App startup: SUPABASE_KEY set:", bool(os.environ.get("SUPABASE_KEY")))
+print("App startup: MAIL_USERNAME set:", bool(app.config.get("MAIL_USERNAME")))
+print("App startup: MAIL_DEFAULT_SENDER set:", bool(app.config.get("MAIL_DEFAULT_SENDER")))
 
 
 def establish_user_session(user):
@@ -70,6 +76,7 @@ def send_otp_email_with_nodemailer(to_email, otp):
         return True
     except Exception as e:
         print(f"Email error: {e}")
+        traceback.print_exc()
         return False
 
 
@@ -793,6 +800,12 @@ def vehicle_reviews(vehicle_id):
 def logout():
     session.clear()
     return redirect('/login')
+
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    traceback.print_exc()
+    return render_template('error.html', error_message=str(error)), 500
 
 
 # ---------------- RUN ----------------
