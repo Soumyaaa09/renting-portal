@@ -1,6 +1,6 @@
 import random
-import subprocess
 from flask import Flask, render_template, request, redirect, session
+from flask_mail import Mail, Message
 from supabase_client import supabase
 import bcrypt
 from datetime import datetime, timedelta
@@ -13,7 +13,17 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
-NODE_MAIL_SCRIPT = os.path.join(os.path.dirname(__file__), "send_otp_email.js")
+app.config.update(
+    MAIL_SERVER=os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
+    MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+    MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS", "True").lower() in ("true", "1", "yes"),
+    MAIL_USE_SSL=os.environ.get("MAIL_USE_SSL", "False").lower() in ("true", "1", "yes"),
+    MAIL_USERNAME=os.environ.get("MAIL_USERNAME", "").strip(),
+    MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD", os.environ.get("MAIL_APP_PASSWORD", "")).replace(" ", "").strip(),
+    MAIL_DEFAULT_SENDER=os.environ.get("MAIL_FROM") or os.environ.get("MAIL_USERNAME", "").strip(),
+)
+
+mail = Mail(app)
 
 
 def establish_user_session(user):
@@ -33,43 +43,33 @@ def establish_user_session(user):
 
 
 def mail_config_ready():
-    smtp_user = os.environ.get("MAIL_USERNAME", "").strip()
-    smtp_pass = os.environ.get("MAIL_APP_PASSWORD", "").replace(" ", "").strip()
-    script_exists = os.path.exists(NODE_MAIL_SCRIPT)
-    
+    smtp_user = app.config.get("MAIL_USERNAME", "")
+    smtp_pass = app.config.get("MAIL_PASSWORD", "")
+
     if not smtp_user:
         print("Email config: MAIL_USERNAME is missing")
     if not smtp_pass:
-        print("Email config: MAIL_APP_PASSWORD is missing")
-    if not script_exists:
-        print(f"Email config: NODE_MAIL_SCRIPT not found at {NODE_MAIL_SCRIPT}")
-    
-    return bool(smtp_user and smtp_pass and script_exists)
+        print("Email config: MAIL_PASSWORD / MAIL_APP_PASSWORD is missing")
+
+    return bool(smtp_user and smtp_pass)
+
 
 def send_otp_email_with_nodemailer(to_email, otp):
     if not mail_config_ready():
-        print("Email error: Mail configuration is incomplete or helper script is missing.")
+        print("Email error: Mail configuration is incomplete.")
         return False
 
     try:
-        result = subprocess.run(
-            ["node", NODE_MAIL_SCRIPT, to_email, otp],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-            cwd=os.path.dirname(__file__),
+        msg = Message(
+            subject="Your DriveNow Login OTP",
+            recipients=[to_email],
+            html=f"<p>Your one-time login code is: <strong>{otp}</strong></p>"
         )
-        if result.returncode != 0:
-            error_output = result.stderr.strip() or result.stdout.strip() or "unknown error"
-            print(f"Email error: {error_output}")
-            return False
+        mail.send(msg)
         print(f"OTP email sent successfully to {to_email}")
         return True
     except Exception as e:
         print(f"Email error: {e}")
-        import traceback
-        traceback.print_exc()
         return False
 
 
